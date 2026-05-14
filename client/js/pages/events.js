@@ -35,114 +35,43 @@ function setupEventListeners() {
     // Register button in modal
     document.getElementById('registerEventBtn')?.addEventListener('click', registerForEvent);
 }
-/**
- * Load events from API
- */
+
+
+//  Load events from API
+
 async function loadEvents() {
     try {
         const search = document.getElementById('eventSearch')?.value || '';
         const status = document.getElementById('statusFilter')?.value || 'all';
         
-        // If authenticated, use API
-        if (ApiService.isAuthenticated()) {
-            let endpoint = `/events?page=${currentPage}&limit=9`;
-            if (status !== 'all') endpoint += `&status=${status}`;
-            if (search) endpoint += `&search=${encodeURIComponent(search)}`;
+        let endpoint = `/events?page=${currentPage}&limit=9`;
+        if (status !== 'all') endpoint += `&status=${status}`;
+        if (search) endpoint += `&search=${encodeURIComponent(search)}`;
 
-            const response = await ApiService.get(endpoint);
-            
-            if (response.success) {
-                renderEvents(response.data);
-                totalPages = response.pagination?.pages || 1;
-                renderPagination();
-            }
-        } else {
-            // If not authenticated, show sample events
-            renderSampleEvents();
+        // If not authenticated, use public endpoint
+        if (!ApiService.isAuthenticated()) {
+            endpoint = endpoint.replace('/events', '/events/public');
+        }
+
+        const response = await ApiService.get(endpoint);
+        
+        if (response.success) {
+            renderEvents(response.data);
+            totalPages = response.pagination?.pages || 1;
+            renderPagination();
         }
     } catch (error) {
         console.error('Failed to load events:', error);
-        // Show sample events as fallback
-        renderSampleEvents();
+        // Show empty state with message
+        document.getElementById('eventsGrid').innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <h3>Unable to Load Events</h3>
+                <p>Please check your connection and try again.</p>
+                <button class="btn btn-outline" onclick="loadEvents()">Retry</button>
+            </div>
+        `;
     }
-}
-
-/**
- * Render sample events for non-authenticated users
- */
-function renderSampleEvents() {
-    const sampleEvents = [
-        {
-            id: 1,
-            title: 'Annual General Meeting 2026',
-            description: 'Join us for the Annual General Meeting 2026, a cornerstone event where leadership, stakeholders, and employees come together to reflect on achievements and discuss strategic initiatives.',
-            date: '2026-06-15',
-            time: '09:00:00',
-            location: 'Grand Conference Hall, 5th Floor, Headquarters',
-            capacity: 250,
-            available_slots: 180,
-            status: 'published'
-        },
-        {
-            id: 2,
-            title: 'Tech Innovation Summit 2026',
-            description: 'Join industry leaders, tech enthusiasts, and innovators for a transformative day of learning, networking, and hands-on exploration at the annual Tech Innovation Summit.',
-            date: '2026-08-20',
-            time: '08:30:00',
-            location: 'Innovation Convention Center, 200 Tech Park Drive',
-            capacity: 500,
-            available_slots: 320,
-            status: 'published'
-        },
-        {
-            id: 3,
-            title: 'Team Building Retreat',
-            description: 'A fun-filled day of team building activities, workshops, and outdoor adventures designed to strengthen collaboration and boost morale.',
-            date: '2026-07-10',
-            time: '10:00:00',
-            location: 'Adventure Park Resort, Lakeside',
-            capacity: 100,
-            available_slots: 45,
-            status: 'published'
-        },
-        {
-            id: 4,
-            title: 'Leadership Workshop Series',
-            description: 'Monthly leadership development workshop focusing on emotional intelligence, strategic thinking, and effective communication.',
-            date: '2026-09-05',
-            time: '14:00:00',
-            location: 'Training Room B, 3rd Floor',
-            capacity: 30,
-            available_slots: 12,
-            status: 'published'
-        },
-        {
-            id: 5,
-            title: 'End of Year Gala Dinner',
-            description: 'Celebrate the achievements of the year with an elegant gala dinner, awards ceremony, and live entertainment.',
-            date: '2026-12-20',
-            time: '18:00:00',
-            location: 'Grand Ballroom, The Ritz Hotel',
-            capacity: 300,
-            available_slots: 200,
-            status: 'published'
-        },
-        {
-            id: 6,
-            title: 'Health & Wellness Fair',
-            description: 'A comprehensive health fair featuring free check-ups, fitness demonstrations, nutrition workshops, and wellness resources.',
-            date: '2026-11-15',
-            time: '09:00:00',
-            location: 'Company Sports Complex',
-            capacity: 200,
-            available_slots: 150,
-            status: 'published'
-        }
-    ];
-
-    renderEvents(sampleEvents);
-    totalPages = 1;
-    document.getElementById('pagination').innerHTML = '';
 }
 
 /**
@@ -156,9 +85,10 @@ function renderEvents(events) {
         grid.innerHTML = '';
         emptyState.classList.remove('d-none');
         return;
-    }renderEvents(events) {
-    // ... keep the beginning of the function the same ...
-    
+    }
+
+    emptyState.classList.add('d-none');
+
     grid.innerHTML = events.map(event => `
         <div class="event-card">
             <div class="event-card-image">
@@ -252,7 +182,7 @@ async function showEventDetail(eventId) {
                 document.getElementById('registerEventBtn').disabled = false;
             }
             
-            // Hide register button if not published
+            // Hide register button if not published or not authenticated
             const registerBtn = document.getElementById('registerEventBtn');
             if (selectedEvent.status !== 'published' || !ApiService.isAuthenticated()) {
                 registerBtn.style.display = 'none';
@@ -283,6 +213,7 @@ function closeDetailModal() {
 async function quickRegister(eventId) {
     if (!ApiService.isAuthenticated()) {
         Toast.warning('Please login to register');
+        sessionStorage.setItem('redirectAfterLogin', `event-detail.html?id=${eventId}`);
         setTimeout(() => window.location.href = 'login.html', 1000);
         return;
     }
@@ -293,7 +224,7 @@ async function quickRegister(eventId) {
         
         if (response.success) {
             Toast.success('Successfully registered!');
-            loadEvents(); // Refresh events list
+            loadEvents();
         }
     } catch (error) {
         Toast.error(error.message || 'Registration failed');
@@ -368,6 +299,7 @@ function resetFilters() {
 }
 
 // Global functions
+window.handleRegisterClick = handleRegisterClick;
 window.showEventDetail = showEventDetail;
 window.quickRegister = quickRegister;
 window.goToPage = goToPage;

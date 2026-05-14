@@ -38,6 +38,7 @@ app.use(express.urlencoded({ extended: true }));
 const authRoutes = require('./routes/auth');
 const eventRoutes = require('./routes/events');
 const registrationRoutes = require('./routes/registrations');
+const vendorRoutes = require('./routes/vendors');
 
 // API Routes
 app.get('/api/health', (req, res) => {
@@ -66,6 +67,8 @@ app.use((req, res) => {
   });
 });
 
+app.use('/api/vendors', vendorRoutes);
+
 // Global error handler
 app.use(errorHandler);
 
@@ -73,7 +76,7 @@ app.use(errorHandler);
 const startServer = async () => {
   try {
     const isConnected = await testConnection();
-    
+
     if (!isConnected) {
       console.error('❌ Could not connect to database. Please check your configuration.');
       process.exit(1);

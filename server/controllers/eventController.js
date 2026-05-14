@@ -7,13 +7,70 @@ const { pool } = require('../config/database');
 class EventController {
 
   /**
+   * Get public events (no auth required)
+   * GET /api/events/public
+   */
+  static async getPublicEvents(req, res, next) {
+    try {
+      const { search, page = 1, limit = 9 } = req.query;
+      
+      let query = `
+        SELECT e.id, e.title, e.description, e.date, e.time, e.location, 
+               e.capacity, e.available_slots, e.status, e.image_url,
+               u.name as creator_name,
+               (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status != 'cancelled') as registration_count
+        FROM events e
+        LEFT JOIN users u ON e.created_by = u.id
+        WHERE e.status = 'published'
+      `;
+      const params = [];
+
+      if (search) {
+        query += ' AND (e.title LIKE ? OR e.location LIKE ?)';
+        params.push(`%${search}%`, `%${search}%`);
+      }
+
+      query += ' ORDER BY e.date DESC';
+
+      const offset = (page - 1) * limit;
+      query += ' LIMIT ? OFFSET ?';
+      params.push(parseInt(limit), parseInt(offset));
+
+      const [events] = await pool.query(query, params);
+
+      // Get total count
+      let countQuery = "SELECT COUNT(*) as total FROM events WHERE status = 'published'";
+      const countParams = [];
+      if (search) {
+        countQuery += ' AND (title LIKE ? OR location LIKE ?)';
+        countParams.push(`%${search}%`, `%${search}%`);
+      }
+      const [countResult] = await pool.query(countQuery, countParams);
+
+      res.json({
+        success: true,
+        data: events,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: countResult[0].total,
+          pages: Math.ceil(countResult[0].total / limit)
+        }
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Get all events with optional filters
    * GET /api/events
    */
   static async getAllEvents(req, res, next) {
     try {
       const { status, search, page = 1, limit = 10 } = req.query;
-
+      
       let query = `
         SELECT e.*, u.name as creator_name,
         (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status != 'cancelled') as registration_count
@@ -37,15 +94,12 @@ class EventController {
 
       // Role-based filtering
       if (req.user.role === 'employee') {
-        // Employees see only published events
         query += ' AND e.status = ?';
         params.push('published');
       } else if (req.user.role === 'vendor') {
-        // Vendors see published events
         query += ' AND e.status = ?';
         params.push('published');
       }
-      // Admins see all their events
 
       // Sort by date
       query += ' ORDER BY e.date DESC';
@@ -60,7 +114,7 @@ class EventController {
       // Get total count for pagination
       let countQuery = 'SELECT COUNT(*) as total FROM events WHERE 1=1';
       const countParams = [];
-
+      
       if (status && status !== 'all') {
         countQuery += ' AND status = ?';
         countParams.push(status);
@@ -115,9 +169,9 @@ class EventController {
         });
       }
 
-      // Get registered users for this event (admin only)
+      // Get registered users for this event
       let registrations = [];
-      if (req.user.role === 'admin') {
+      if (req.user && req.user.role === 'admin') {
         const [regs] = await pool.query(`
           SELECT r.*, u.name as user_name, u.email as user_email
           FROM registrations r
@@ -125,6 +179,15 @@ class EventController {
           WHERE r.event_id = ?
           ORDER BY r.registration_date DESC
         `, [id]);
+        registrations = regs;
+      } else if (req.user) {
+        // Show only current user's registration
+        const [regs] = await pool.query(`
+          SELECT r.*, u.name as user_name, u.email as user_email
+          FROM registrations r
+          JOIN users u ON r.user_id = u.id
+          WHERE r.event_id = ? AND r.user_id = ?
+        `, [id, req.user.id]);
         registrations = regs;
       }
 
@@ -149,7 +212,6 @@ class EventController {
     try {
       const { title, description, date, time, location, capacity, status } = req.body;
 
-      // Validate required fields
       if (!title || !date || !location || !capacity) {
         return res.status(400).json({
           success: false,
@@ -157,11 +219,10 @@ class EventController {
         });
       }
 
-      // Validate date is not in the past
       const eventDate = new Date(date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
+      
       if (eventDate < today) {
         return res.status(400).json({
           success: false,
@@ -179,13 +240,12 @@ class EventController {
           time || null,
           location.trim(),
           parseInt(capacity),
-          parseInt(capacity), // Initially available slots = capacity
+          parseInt(capacity),
           status || 'draft',
           req.user.id
         ]
       );
 
-      // Fetch the created event
       const [events] = await pool.query('SELECT * FROM events WHERE id = ?', [result.insertId]);
 
       res.status(201).json({
@@ -208,7 +268,6 @@ class EventController {
       const { id } = req.params;
       const { title, description, date, time, location, capacity, status } = req.body;
 
-      // Check if event exists and user owns it
       const [events] = await pool.query('SELECT * FROM events WHERE id = ? AND created_by = ?', [id, req.user.id]);
 
       if (events.length === 0) {
@@ -219,48 +278,26 @@ class EventController {
       }
 
       const event = events[0];
-
-      // If changing capacity, adjust available slots
       let availableSlots = event.available_slots;
+      
       if (capacity && parseInt(capacity) !== event.capacity) {
         const difference = parseInt(capacity) - event.capacity;
         availableSlots = Math.max(0, event.available_slots + difference);
       }
 
-      // Build update query dynamically
       const updates = [];
       const values = [];
 
-      if (title) {
-        updates.push('title = ?');
-        values.push(title.trim());
+      if (title) { updates.push('title = ?'); values.push(title.trim()); }
+      if (description !== undefined) { updates.push('description = ?'); values.push(description); }
+      if (date) { updates.push('date = ?'); values.push(date); }
+      if (time !== undefined) { updates.push('time = ?'); values.push(time); }
+      if (location) { updates.push('location = ?'); values.push(location.trim()); }
+      if (capacity) { 
+        updates.push('capacity = ?'); values.push(parseInt(capacity));
+        updates.push('available_slots = ?'); values.push(availableSlots);
       }
-      if (description !== undefined) {
-        updates.push('description = ?');
-        values.push(description);
-      }
-      if (date) {
-        updates.push('date = ?');
-        values.push(date);
-      }
-      if (time !== undefined) {
-        updates.push('time = ?');
-        values.push(time);
-      }
-      if (location) {
-        updates.push('location = ?');
-        values.push(location.trim());
-      }
-      if (capacity) {
-        updates.push('capacity = ?');
-        values.push(parseInt(capacity));
-        updates.push('available_slots = ?');
-        values.push(availableSlots);
-      }
-      if (status) {
-        updates.push('status = ?');
-        values.push(status);
-      }
+      if (status) { updates.push('status = ?'); values.push(status); }
 
       if (updates.length === 0) {
         return res.status(400).json({
@@ -270,13 +307,8 @@ class EventController {
       }
 
       values.push(id);
+      await pool.query(`UPDATE events SET ${updates.join(', ')} WHERE id = ?`, values);
 
-      await pool.query(
-        `UPDATE events SET ${updates.join(', ')} WHERE id = ?`,
-        values
-      );
-
-      // Fetch updated event
       const [updatedEvents] = await pool.query('SELECT * FROM events WHERE id = ?', [id]);
 
       res.json({
@@ -298,7 +330,6 @@ class EventController {
     try {
       const { id } = req.params;
 
-      // Check if event exists and user owns it
       const [events] = await pool.query('SELECT * FROM events WHERE id = ? AND created_by = ?', [id, req.user.id]);
 
       if (events.length === 0) {
@@ -308,7 +339,6 @@ class EventController {
         });
       }
 
-      // Check if there are active registrations
       const [registrations] = await pool.query(
         "SELECT COUNT(*) as count FROM registrations WHERE event_id = ? AND status = 'registered'",
         [id]
@@ -370,75 +400,6 @@ class EventController {
     } catch (error) {
       next(error);
     }
-  }
-}
-
-/**
- * Get public events (no auth required)
- * GET /api/events/public
- */
-static async getPublicEvents(req, res, next) {
-  try {
-    const { search, page = 1, limit = 9 } = req.query;
-
-    let query = `
-            SELECT e.*, u.name as creator_name,
-            (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status != 'cancelled') as registration_count
-            FROM events e
-            LEFT JOIN users u ON e.created_by = u.id
-            WHERE e.status = 'published'
-        `;
-    const params = [];
-
-    if (search) {
-      query += ' AND (e.title LIKE ? OR e.location LIKE ?)';
-      params.push(`%${search}%`, `%${search}%`);
-    }
-
-    query += ' ORDER BY e.date DESC';
-
-    const offset = (page - 1) * limit;
-    query += ' LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), parseInt(offset));
-
-    const [events] = await pool.query(query, params);
-
-    // Get total count
-    let countQuery = "SELECT COUNT(*) as total FROM events WHERE status = 'published'";
-    const countParams = [];
-    if (search) {
-      countQuery += ' AND (title LIKE ? OR location LIKE ?)';
-      countParams.push(`%${search}%`, `%${search}%`);
-    }
-    const [countResult] = await pool.query(countQuery, countParams);
-
-    // Remove sensitive data
-    const sanitizedEvents = events.map(event => ({
-      id: event.id,
-      title: event.title,
-      description: event.description,
-      date: event.date,
-      time: event.time,
-      location: event.location,
-      capacity: event.capacity,
-      available_slots: event.available_slots,
-      status: event.status,
-      registration_count: event.registration_count
-    }));
-
-    res.json({
-      success: true,
-      data: sanitizedEvents,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total: countResult[0].total,
-        pages: Math.ceil(countResult[0].total / limit)
-      }
-    });
-
-  } catch (error) {
-    next(error);
   }
 }
 

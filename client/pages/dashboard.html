@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <link rel="stylesheet" href="../css/components.css">
     <link rel="stylesheet" href="../css/dashboard.css">
 </head>
+
 <body>
     <!-- Top Navigation Bar -->
     <nav class="navbar" id="navbar">
@@ -51,14 +53,14 @@
                     </div>
                 </div>
             </div>
-            
+
             <ul class="sidebar-nav">
-                <li>
+                <li id="sidebarEventsMenu">
                     <a href="#" class="active" data-tab="events">
                         <i class="fas fa-calendar-alt"></i> Events Management
                     </a>
                 </li>
-                <li>
+                <li id="sidebarRegistrationsMenu">
                     <a href="#" data-tab="registrations">
                         <i class="fas fa-clipboard-list"></i> My Registrations
                     </a>
@@ -68,19 +70,19 @@
                         <i class="fas fa-store"></i> Vendor Management
                     </a>
                 </li>
-                <li>
+                <li id="sidebarServicesMenu" style="display:none;">
+                    <a href="#" data-tab="services">
+                        <i class="fas fa-tools"></i> My Services
+                    </a>
+                </li>
+                <li id="sidebarProfileMenu">
                     <a href="#" data-tab="profile">
                         <i class="fas fa-user-cog"></i> Profile Settings
                     </a>
                 </li>
-                
+
                 <li class="sidebar-divider"></li>
-                
-                <li>
-                    <a href="../index.html">
-                        <i class="fas fa-home"></i> Back to Home
-                    </a>
-                </li>
+
                 <li>
                     <a href="#" id="sidebarLogoutBtn" class="sidebar-logout">
                         <i class="fas fa-sign-out-alt"></i> Logout
@@ -215,6 +217,69 @@
                     </div>
                 </div>
 
+                <!-- Vendors Tab (Admin Only) -->
+                <div class="tab-pane" id="vendorsTab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Vendor Management</h3>
+                            <span class="text-muted">Approve or reject vendor registrations</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table id="vendorsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Company</th>
+                                            <th>Service Type</th>
+                                            <th>Contact</th>
+                                            <th>Status</th>
+                                            <th>Registered</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="vendorsTableBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center">Loading vendors...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Services Tab (Vendor Only) -->
+                <div class="tab-pane" id="servicesTab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>My Services</h3>
+                            <button class="btn btn-primary btn-sm" onclick="openServiceModal()">
+                                <i class="fas fa-plus"></i> Add Service
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table id="servicesTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Service Name</th>
+                                            <th>Description</th>
+                                            <th>Price</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="servicesTableBody">
+                                        <tr>
+                                            <td colspan="5" class="text-center">Loading services...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Profile Tab -->
                 <div class="tab-pane" id="profileTab">
                     <div class="profile-grid">
@@ -234,7 +299,8 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="profilePhone" class="form-label">Phone</label>
-                                        <input type="tel" id="profilePhone" class="form-control" placeholder="+1234567890">
+                                        <input type="tel" id="profilePhone" class="form-control"
+                                            placeholder="+1234567890">
                                     </div>
                                     <div class="form-group">
                                         <label for="profileRole" class="form-label">Role</label>
@@ -288,11 +354,13 @@
                 <form id="eventForm">
                     <div class="form-group">
                         <label for="eventTitle" class="form-label">Event Title *</label>
-                        <input type="text" id="eventTitle" class="form-control" placeholder="Annual Company Meetup" required>
+                        <input type="text" id="eventTitle" class="form-control" placeholder="Annual Company Meetup"
+                            required>
                     </div>
                     <div class="form-group">
                         <label for="eventDescription" class="form-label">Description</label>
-                        <textarea id="eventDescription" class="form-control" rows="3" placeholder="Event details..."></textarea>
+                        <textarea id="eventDescription" class="form-control" rows="3"
+                            placeholder="Event details..."></textarea>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -306,7 +374,8 @@
                     </div>
                     <div class="form-group">
                         <label for="eventLocation" class="form-label">Location *</label>
-                        <input type="text" id="eventLocation" class="form-control" placeholder="Conference Room A" required>
+                        <input type="text" id="eventLocation" class="form-control" placeholder="Conference Room A"
+                            required>
                     </div>
                     <div class="form-group">
                         <label for="eventCapacity" class="form-label">Capacity *</label>
@@ -338,4 +407,5 @@
     <script src="../js/components/toast.js"></script>
     <script src="../js/pages/dashboard.js"></script>
 </body>
+
 </html>

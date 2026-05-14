@@ -1,6 +1,6 @@
 /**
  * Vendors Page Script
- * Displays approved vendors and their services
+ * Displays approved vendors from the database
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,20 +28,23 @@ async function loadVendors() {
         const search = document.getElementById('vendorSearch')?.value || '';
         const serviceType = document.getElementById('serviceFilter')?.value || 'all';
         
-        let endpoint = '/vendors?approved=true';
+        let endpoint = '/vendors?approved=true&limit=20';
         if (serviceType !== 'all') endpoint += `&serviceType=${serviceType}`;
         if (search) endpoint += `&search=${encodeURIComponent(search)}`;
 
-        const response = await ApiService.get(endpoint);
+        // If not authenticated, still try to fetch (public route)
+        const response = await fetch(`${CONFIG.API_URL}${endpoint}`);
+        const data = await response.json();
         
-        if (response.success) {
-            renderVendors(response.data);
-            updateStats(response.data);
+        if (data.success) {
+            renderVendors(data.data);
+            updateStats(data.data);
+        } else {
+            showEmptyState('No vendors found');
         }
     } catch (error) {
         console.error('Failed to load vendors:', error);
-        // Show sample vendors since vendors API might not be ready yet
-        renderSampleVendors();
+        showEmptyState('Unable to load vendors. Please try again.');
     }
 }
 
@@ -100,62 +103,15 @@ function renderVendors(vendors) {
 }
 
 /**
- * Render sample vendors (fallback if API not ready)
+ * Show empty state with message
  */
-function renderSampleVendors() {
-    const sampleVendors = [
-        {
-            company_name: 'Elite Catering Services',
-            service_type: 'Catering',
-            description: 'Premium corporate catering with customizable menus. From executive lunches to gala dinners, we deliver exceptional culinary experiences.',
-            contact_email: 'info@elitecatering.com',
-            contact_phone: '+1 (555) 234-5678',
-            website: 'www.elitecatering.com'
-        },
-        {
-            company_name: 'ProCapture Photography',
-            service_type: 'Photography',
-            description: 'Professional event photography and videography. We capture your corporate moments with artistic excellence.',
-            contact_email: 'hello@procapture.com',
-            contact_phone: '+1 (555) 345-6789',
-            website: 'www.procapture.com'
-        },
-        {
-            company_name: 'TechVision AV Solutions',
-            service_type: 'Technology',
-            description: 'Complete audio-visual solutions for corporate events. Projectors, sound systems, live streaming, and technical support.',
-            contact_email: 'sales@techvisionav.com',
-            contact_phone: '+1 (555) 456-7890',
-            website: 'www.techvisionav.com'
-        },
-        {
-            company_name: 'Elegant Decor & Design',
-            service_type: 'Decoration',
-            description: 'Transform your venue with stunning decorations. Specializing in corporate event themes, floral arrangements, and stage design.',
-            contact_email: 'design@elegantdecor.com',
-            contact_phone: '+1 (555) 567-8901',
-            website: 'www.elegantdecor.com'
-        },
-        {
-            company_name: 'Stellar Entertainment Group',
-            service_type: 'Entertainment',
-            description: 'Live bands, DJs, speakers, and performers for corporate events. Making your events memorable and engaging.',
-            contact_email: 'book@stellarentertainment.com',
-            contact_phone: '+1 (555) 678-9012',
-            website: 'www.stellarentertainment.com'
-        },
-        {
-            company_name: 'Executive Transport Co.',
-            service_type: 'Transportation',
-            description: 'Luxury transportation services for corporate events. VIP shuttles, car services, and logistics management.',
-            contact_email: 'rides@executivetransport.com',
-            contact_phone: '+1 (555) 789-0123',
-            website: 'www.executivetransport.com'
-        }
-    ];
-
-    renderVendors(sampleVendors);
-    updateStats(sampleVendors);
+function showEmptyState(message) {
+    const grid = document.getElementById('vendorsGrid');
+    const emptyState = document.getElementById('emptyState');
+    
+    grid.innerHTML = '';
+    emptyState.classList.remove('d-none');
+    emptyState.querySelector('p').textContent = message;
 }
 
 /**
@@ -163,11 +119,11 @@ function renderSampleVendors() {
  */
 function updateStats(vendors) {
     const total = vendors.length;
-    const approved = vendors.filter(v => v.is_approved !== false).length;
+    const approved = vendors.filter(v => v.is_approved === 1).length;
     
     document.getElementById('totalVendors').textContent = total;
     document.getElementById('approvedVendors').textContent = approved;
-    document.getElementById('totalServices').textContent = total * 3; // Estimated services
+    document.getElementById('totalServices').textContent = total * 2 || 0;
 }
 
 /**

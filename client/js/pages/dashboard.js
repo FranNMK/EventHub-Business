@@ -1,89 +1,87 @@
 /**
  * Dashboard Page Script
- * Enhanced with sidebar navigation
+ * Full role-based implementation
  */
 
 let currentUser = null;
 let currentEvents = [];
 let currentRegistrations = [];
+let currentVendors = [];
+let currentServices = [];
 let isEditing = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Check authentication
     if (!ApiService.isAuthenticated()) {
         window.location.href = 'login.html';
         return;
     }
 
     currentUser = ApiService.getCurrentUser();
-    
-    // Initialize dashboard
     initDashboard();
     setupEventListeners();
     loadDashboardData();
 });
 
+/**
+ * Initialize dashboard based on role
+ */
 function initDashboard() {
-    // Set user info
     document.getElementById('userName').textContent = currentUser.name || 'User';
     document.getElementById('sidebarUserName').textContent = currentUser.name || 'User';
     document.getElementById('sidebarUserRole').textContent = currentUser.role || 'user';
     
-    // Set avatar initial
     const avatar = document.getElementById('userAvatar');
     if (avatar && currentUser.name) {
         avatar.textContent = currentUser.name.charAt(0).toUpperCase();
     }
     
-    // Role-based UI adjustments
-    const createEventBtn = document.getElementById('createEventBtn');
-    const sidebarVendorsMenu = document.getElementById('sidebarVendorsMenu');
     const headerActions = document.getElementById('headerActions');
     
+    // Configure based on role
     if (currentUser.role === 'admin') {
-        // Admin: Full access
-        if (createEventBtn) createEventBtn.style.display = 'inline-flex';
-        if (sidebarVendorsMenu) sidebarVendorsMenu.style.display = 'block';
-        document.getElementById('dashboardSubtitle').textContent = 'Manage events, vendors, and track registrations';
-        document.getElementById('eventFilter').style.display = 'inline-block';
+        // Admin: Show all menus
+        document.getElementById('sidebarEventsMenu').style.display = 'block';
+        document.getElementById('sidebarRegistrationsMenu').style.display = 'block';
+        document.getElementById('sidebarVendorsMenu').style.display = 'block';
+        document.getElementById('sidebarServicesMenu').style.display = 'none';
+        document.getElementById('sidebarProfileMenu').style.display = 'block';
+        document.getElementById('dashboardSubtitle').textContent = 'Manage events, vendors, and registrations';
+        
+        headerActions.innerHTML = `
+            <button class="btn btn-primary" onclick="openEventModal()">
+                <i class="fas fa-plus"></i> Create Event
+            </button>
+        `;
         
     } else if (currentUser.role === 'vendor') {
-        // Vendor: Can manage their services, view events
-        if (createEventBtn) createEventBtn.style.display = 'none';
-        if (sidebarVendorsMenu) sidebarVendorsMenu.style.display = 'block';
-        document.getElementById('dashboardSubtitle').textContent = 'Manage your services and view event bookings';
+        // Vendor: Show services and registrations
+        document.getElementById('sidebarEventsMenu').style.display = 'block';
+        document.getElementById('sidebarRegistrationsMenu').style.display = 'block';
+        document.getElementById('sidebarVendorsMenu').style.display = 'none';
+        document.getElementById('sidebarServicesMenu').style.display = 'block';
+        document.getElementById('sidebarProfileMenu').style.display = 'block';
+        document.getElementById('dashboardSubtitle').textContent = 'Manage your services and view bookings';
         
-        // Change create event button to add service button
-        if (headerActions) {
-            headerActions.innerHTML = `
-                <button class="btn btn-primary" onclick="window.location.href='vendor-services.html'">
-                    <i class="fas fa-plus"></i> Add Service
-                </button>
-            `;
-        }
-        
-        // Hide event filter for vendors (they only see published events)
-        const eventFilter = document.getElementById('eventFilter');
-        if (eventFilter) eventFilter.style.display = 'none';
+        headerActions.innerHTML = `
+            <button class="btn btn-primary" onclick="openServiceModal()">
+                <i class="fas fa-plus"></i> Add Service
+            </button>
+        `;
         
     } else {
-        // Employee: Can browse events and manage registrations
-        if (createEventBtn) createEventBtn.style.display = 'none';
-        if (sidebarVendorsMenu) sidebarVendorsMenu.style.display = 'none';
+        // Employee: Only events and registrations
+        document.getElementById('sidebarEventsMenu').style.display = 'block';
+        document.getElementById('sidebarRegistrationsMenu').style.display = 'block';
+        document.getElementById('sidebarVendorsMenu').style.display = 'none';
+        document.getElementById('sidebarServicesMenu').style.display = 'none';
+        document.getElementById('sidebarProfileMenu').style.display = 'block';
         document.getElementById('dashboardSubtitle').textContent = 'Browse events and manage your registrations';
         
-        // Change create event button to browse events button
-        if (headerActions) {
-            headerActions.innerHTML = `
-                <button class="btn btn-primary" onclick="window.location.href='events.html'">
-                    <i class="fas fa-search"></i> Browse Events
-                </button>
-            `;
-        }
-        
-        // Hide event filter and show only published events
-        const eventFilter = document.getElementById('eventFilter');
-        if (eventFilter) eventFilter.style.display = 'none';
+        headerActions.innerHTML = `
+            <button class="btn btn-primary" onclick="switchTab('events')">
+                <i class="fas fa-search"></i> Browse Events
+            </button>
+        `;
     }
     
     // Load profile data
@@ -93,46 +91,33 @@ function initDashboard() {
 }
 
 /**
- * Setup all event listeners
+ * Setup event listeners
  */
 function setupEventListeners() {
-    // Sidebar navigation
+    // Sidebar tab switching
     document.querySelectorAll('.sidebar-nav a[data-tab]').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const tabName = link.dataset.tab;
             switchTab(tabName);
-            
-            // Update active state in sidebar
             document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
             link.classList.add('active');
-            
-            // Close sidebar on mobile
             closeSidebar();
         });
     });
     
-    // Sidebar toggle button (mobile)
+    // Sidebar toggle (mobile)
     document.getElementById('sidebarToggle')?.addEventListener('click', toggleSidebar);
-    
-    // Sidebar overlay (click to close)
     document.getElementById('sidebarOverlay')?.addEventListener('click', closeSidebar);
     
-    // Sidebar logout button
+    // Logout
     document.getElementById('sidebarLogoutBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
         handleLogout();
     });
-    
-    // Top navbar logout (if exists)
     document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
         handleLogout();
-    });
-    
-    // Create event button
-    document.getElementById('createEventBtn')?.addEventListener('click', () => {
-        openEventModal();
     });
     
     // Event modal
@@ -154,7 +139,7 @@ function setupEventListeners() {
     // Password form
     document.getElementById('passwordForm')?.addEventListener('submit', changePassword);
     
-    // Keyboard shortcut to close sidebar (Escape)
+    // Keyboard
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeSidebar();
     });
@@ -166,64 +151,49 @@ function setupEventListeners() {
 function toggleSidebar() {
     const sidebar = document.getElementById('dashboardSidebar');
     const overlay = document.getElementById('sidebarOverlay');
-    
     sidebar.classList.toggle('open');
     overlay.classList.toggle('active');
-    
-    // Prevent body scroll when sidebar is open
-    if (sidebar.classList.contains('open')) {
-        document.body.style.overflow = 'hidden';
-    } else {
-        document.body.style.overflow = '';
-    }
+    document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
 }
 
-/**
- * Close sidebar (mobile)
- */
 function closeSidebar() {
     const sidebar = document.getElementById('dashboardSidebar');
     const overlay = document.getElementById('sidebarOverlay');
-    
     sidebar.classList.remove('open');
     overlay.classList.remove('active');
     document.body.style.overflow = '';
 }
 
-/**
- * Handle logout
- */
 function handleLogout() {
     if (confirm('Are you sure you want to logout?')) {
         ApiService.clearAuth();
         Toast.success('Logged out successfully');
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 500);
+        setTimeout(() => window.location.href = 'login.html', 500);
     }
 }
 
 /**
- * Switch dashboard tabs
+ * Switch tabs
  */
 function switchTab(tabName) {
     const tabMap = {
         'events': 'eventsTab',
         'registrations': 'registrationsTab',
-        'profile': 'profileTab',
-        'vendors': 'eventsTab' // For now, vendors tab shows events
+        'vendors': 'vendorsTab',
+        'services': 'servicesTab',
+        'profile': 'profileTab'
     };
     
-    // Hide all panes
-    document.querySelectorAll('.tab-pane').forEach(pane => {
-        pane.classList.remove('active');
-    });
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
     
-    // Show selected pane
     const activePane = document.getElementById(tabMap[tabName]);
     if (activePane) {
         activePane.classList.add('active');
     }
+    
+    // Load data for specific tabs
+    if (tabName === 'vendors') loadVendors();
+    if (tabName === 'services') loadServices();
 }
 
 /**
@@ -232,15 +202,11 @@ function switchTab(tabName) {
 async function loadDashboardData() {
     try {
         Helpers.showLoading();
-        
         await loadEvents();
         await loadRegistrations();
-        await loadProfile();
         updateStats();
-        
     } catch (error) {
-        console.error('Failed to load dashboard data:', error);
-        Toast.error('Failed to load some dashboard data');
+        console.error('Failed to load dashboard:', error);
     } finally {
         Helpers.hideLoading();
     }
@@ -279,21 +245,33 @@ async function loadRegistrations() {
 }
 
 /**
- * Load profile
+ * Load vendors (admin only)
  */
-async function loadProfile() {
+async function loadVendors() {
     try {
-        const response = await ApiService.get('/auth/profile');
+        const response = await ApiService.get('/vendors');
         if (response.success) {
-            const user = response.data;
-            document.getElementById('profileName').value = user.name || '';
-            document.getElementById('profilePhone').value = user.phone || '';
-            
-            localStorage.setItem(CONFIG.STORAGE_KEYS.USER, JSON.stringify(user));
-            currentUser = user;
+            currentVendors = response.data || [];
+            renderVendorManagement(currentVendors);
         }
     } catch (error) {
-        console.error('Failed to load profile:', error);
+        console.error('Failed to load vendors:', error);
+    }
+}
+
+/**
+ * Load services (vendor only)
+ */
+async function loadServices() {
+    try {
+        const response = await ApiService.get('/services/my');
+        if (response.success) {
+            currentServices = response.data || [];
+            renderServices(currentServices);
+        }
+    } catch (error) {
+        // If endpoint doesn't exist yet, show empty
+        renderServices([]);
     }
 }
 
@@ -304,42 +282,32 @@ function renderEvents(events) {
     const tbody = document.getElementById('eventsTableBody');
     
     if (!events || events.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5">
-                    <div class="empty-state">
-                        <i class="fas fa-calendar-times"></i>
-                        <p>No events found</p>
-                        ${currentUser.role === 'admin' ? '<button class="btn btn-primary" onclick="openEventModal()">Create Your First Event</button>' : ''}
-                    </div>
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="5">
+            <div class="empty-state">
+                <i class="fas fa-calendar-times"></i>
+                <p>No events found</p>
+                ${currentUser.role === 'admin' ? '<button class="btn btn-primary" onclick="openEventModal()">Create Your First Event</button>' : ''}
+            </div>
+        </td></tr>`;
         return;
     }
     
     tbody.innerHTML = events.map(event => `
         <tr>
-            <td>
-                <strong>${Helpers.sanitizeHTML(event.title)}</strong>
-                ${event.description ? `<br><small class="text-muted">${Helpers.truncateText(event.description, 50)}</small>` : ''}
-            </td>
+            <td><strong>${Helpers.sanitizeHTML(event.title)}</strong>
+                ${event.description ? `<br><small class="text-muted">${Helpers.truncateText(event.description, 50)}</small>` : ''}</td>
             <td>${Helpers.formatDate(event.date)} ${event.time ? Helpers.formatTime(event.time) : ''}</td>
             <td>${event.available_slots !== null ? `${event.available_slots}/${event.capacity}` : event.capacity}</td>
             <td><span class="badge ${Helpers.getStatusBadgeClass(event.status)}">${event.status}</span></td>
             <td>
                 <div class="action-buttons">
                     <button class="action-btn view" title="View" onclick="viewEvent(${event.id})">
-                        <i class="fas fa-eye"></i>
-                    </button>
+                        <i class="fas fa-eye"></i></button>
                     ${currentUser.role === 'admin' ? `
-                        <button class="action-btn edit" title="Edit" onclick="editEvent(${event.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-btn delete" title="Delete" onclick="deleteEvent(${event.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    ` : ''}
+                    <button class="action-btn edit" title="Edit" onclick="editEvent(${event.id})">
+                        <i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete" title="Delete" onclick="deleteEvent(${event.id})">
+                        <i class="fas fa-trash"></i></button>` : ''}
                 </div>
             </td>
         </tr>
@@ -353,17 +321,13 @@ function renderRegistrations(registrations) {
     const tbody = document.getElementById('registrationsTableBody');
     
     if (!registrations || registrations.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5">
-                    <div class="empty-state">
-                        <i class="fas fa-ticket-alt"></i>
-                        <p>No registrations yet</p>
-                        <a href="events.html" class="btn btn-primary">Browse Events</a>
-                    </div>
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="5">
+            <div class="empty-state">
+                <i class="fas fa-ticket-alt"></i>
+                <p>No registrations yet</p>
+                <button class="btn btn-primary" onclick="switchTab('events')">Browse Events</button>
+            </div>
+        </td></tr>`;
         return;
     }
     
@@ -375,16 +339,9 @@ function renderRegistrations(registrations) {
             <td>${Helpers.formatDate(reg.registration_date)}</td>
             <td>
                 <div class="action-buttons">
-                    ${reg.qr_token ? `
-                        <button class="action-btn view" title="View QR Code" onclick="showQRCode('${reg.qr_token}')">
-                            <i class="fas fa-qrcode"></i>
-                        </button>
-                    ` : ''}
                     ${reg.status === 'registered' ? `
-                        <button class="action-btn delete" title="Cancel" onclick="cancelRegistration(${reg.id})">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    ` : ''}
+                    <button class="action-btn delete" title="Cancel" onclick="cancelRegistration(${reg.id})">
+                        <i class="fas fa-times"></i></button>` : ''}
                 </div>
             </td>
         </tr>
@@ -392,18 +349,78 @@ function renderRegistrations(registrations) {
 }
 
 /**
- * Update dashboard stats
+ * Render vendor management (admin)
+ */
+function renderVendorManagement(vendors) {
+    const tbody = document.getElementById('vendorsTableBody');
+    
+    if (!vendors || vendors.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6">
+            <div class="empty-state"><i class="fas fa-store-slash"></i><p>No vendors found</p></div>
+        </td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = vendors.map(vendor => `
+        <tr>
+            <td><strong>${Helpers.sanitizeHTML(vendor.company_name)}</strong></td>
+            <td>${vendor.service_type || 'N/A'}</td>
+            <td>${vendor.contact_email || 'N/A'}</td>
+            <td><span class="badge ${vendor.is_approved ? 'badge-success' : 'badge-warning'}">${vendor.is_approved ? 'Approved' : 'Pending'}</span></td>
+            <td>${Helpers.formatDate(vendor.created_at)}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-btn ${vendor.is_approved ? 'delete' : 'edit'}" 
+                            title="${vendor.is_approved ? 'Revoke' : 'Approve'}" 
+                            onclick="toggleVendorApproval(${vendor.id}, ${!vendor.is_approved})">
+                        <i class="fas ${vendor.is_approved ? 'fa-times' : 'fa-check'}"></i></button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+/**
+ * Render services (vendor)
+ */
+function renderServices(services) {
+    const tbody = document.getElementById('servicesTableBody');
+    
+    if (!services || services.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5">
+            <div class="empty-state">
+                <i class="fas fa-tools"></i>
+                <p>No services added yet</p>
+                <button class="btn btn-primary" onclick="openServiceModal()">Add Your First Service</button>
+            </div>
+        </td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = services.map(service => `
+        <tr>
+            <td><strong>${Helpers.sanitizeHTML(service.name)}</strong></td>
+            <td>${Helpers.truncateText(service.description || '', 50)}</td>
+            <td>${Helpers.formatCurrency(service.price)}</td>
+            <td><span class="badge ${service.is_available ? 'badge-success' : 'badge-danger'}">${service.is_available ? 'Available' : 'Unavailable'}</span></td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-btn edit" onclick="editService(${service.id})"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete" onclick="deleteService(${service.id})"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+/**
+ * Update stats
  */
 function updateStats() {
-    const totalEvents = currentEvents.length;
-    const totalRegistrations = currentRegistrations.length;
-    const upcoming = currentEvents.filter(e => e.status === 'published' && new Date(e.date) >= new Date()).length;
-    const completed = currentEvents.filter(e => e.status === 'completed').length;
-    
-    document.getElementById('totalEventsStat').textContent = totalEvents;
-    document.getElementById('totalRegistrationsStat').textContent = totalRegistrations;
-    document.getElementById('upcomingEventsStat').textContent = upcoming;
-    document.getElementById('completedEventsStat').textContent = completed;
+    document.getElementById('totalEventsStat').textContent = currentEvents.length;
+    document.getElementById('totalRegistrationsStat').textContent = currentRegistrations.length;
+    document.getElementById('upcomingEventsStat').textContent = currentEvents.filter(e => e.status === 'published' && new Date(e.date) >= new Date()).length;
+    document.getElementById('completedEventsStat').textContent = currentEvents.filter(e => e.status === 'completed').length;
 }
 
 /**
@@ -417,19 +434,14 @@ function filterEvents(status) {
     }
 }
 
-/**
- * Open event modal
- */
+// ===== EVENT MODAL =====
 function openEventModal(event = null) {
     const modal = document.getElementById('eventModal');
-    const title = document.getElementById('eventModalTitle');
-    const saveBtn = document.getElementById('saveEventBtn');
-    
+    document.getElementById('eventModalTitle').textContent = event ? 'Edit Event' : 'Create New Event';
+    document.getElementById('saveEventBtn').textContent = event ? 'Update Event' : 'Create Event';
     isEditing = !!event;
     
     if (event) {
-        title.textContent = 'Edit Event';
-        saveBtn.textContent = 'Update Event';
         document.getElementById('eventId').value = event.id;
         document.getElementById('eventTitle').value = event.title || '';
         document.getElementById('eventDescription').value = event.description || '';
@@ -439,28 +451,19 @@ function openEventModal(event = null) {
         document.getElementById('eventCapacity').value = event.capacity || '';
         document.getElementById('eventStatus').value = event.status || 'draft';
     } else {
-        title.textContent = 'Create New Event';
-        saveBtn.textContent = 'Create Event';
         document.getElementById('eventForm').reset();
         document.getElementById('eventId').value = '';
         document.getElementById('eventStatus').value = 'draft';
     }
-    
     modal.classList.remove('d-none');
 }
 
-/**
- * Close event modal
- */
 function closeEventModal() {
     document.getElementById('eventModal').classList.add('d-none');
     document.getElementById('eventForm').reset();
     isEditing = false;
 }
 
-/**
- * Save event
- */
 async function saveEvent() {
     const eventId = document.getElementById('eventId').value;
     const eventData = {
@@ -480,13 +483,9 @@ async function saveEvent() {
     
     try {
         Helpers.showLoading();
-        
-        let response;
-        if (isEditing && eventId) {
-            response = await ApiService.put(`/events/${eventId}`, eventData);
-        } else {
-            response = await ApiService.post('/events', eventData);
-        }
+        const response = isEditing && eventId 
+            ? await ApiService.put(`/events/${eventId}`, eventData)
+            : await ApiService.post('/events', eventData);
         
         if (response.success) {
             Toast.success(isEditing ? 'Event updated!' : 'Event created!');
@@ -495,26 +494,19 @@ async function saveEvent() {
             updateStats();
         }
     } catch (error) {
-        Toast.error(error.message || 'Failed to save event');
+        Toast.error(error.message);
     } finally {
         Helpers.hideLoading();
     }
 }
 
-/**
- * Edit event
- */
 async function editEvent(eventId) {
     const event = currentEvents.find(e => e.id === eventId);
     if (event) openEventModal(event);
 }
 
-/**
- * Delete event
- */
 async function deleteEvent(eventId) {
     if (!confirm('Delete this event? This cannot be undone.')) return;
-    
     try {
         Helpers.showLoading();
         await ApiService.delete(`/events/${eventId}`);
@@ -522,75 +514,87 @@ async function deleteEvent(eventId) {
         await loadEvents();
         updateStats();
     } catch (error) {
-        Toast.error(error.message || 'Failed to delete event');
+        Toast.error(error.message);
     } finally {
         Helpers.hideLoading();
     }
 }
 
-/**
- * View event
- */
 function viewEvent(eventId) {
     window.location.href = `event-detail.html?id=${eventId}`;
 }
 
-/**
- * Cancel registration
- */
+// ===== REGISTRATION =====
 async function cancelRegistration(registrationId) {
     if (!confirm('Cancel this registration?')) return;
-    
     try {
         Helpers.showLoading();
         await ApiService.delete(`/registrations/${registrationId}`);
         Toast.success('Registration cancelled');
         await loadRegistrations();
+        await loadEvents();
+        updateStats();
     } catch (error) {
-        Toast.error(error.message || 'Failed to cancel');
+        Toast.error(error.message);
     } finally {
         Helpers.hideLoading();
     }
 }
 
-/**
- * Show QR code
- */
-function showQRCode(qrToken) {
-    Toast.info('QR Code feature coming in Module 5');
+// ===== VENDOR APPROVAL (Admin) =====
+async function toggleVendorApproval(vendorId, approved) {
+    try {
+        Helpers.showLoading();
+        await ApiService.patch(`/vendors/${vendorId}/approve`, { approved });
+        Toast.success(`Vendor ${approved ? 'approved' : 'rejected'}`);
+        await loadVendors();
+    } catch (error) {
+        Toast.error(error.message);
+    } finally {
+        Helpers.hideLoading();
+    }
 }
 
-/**
- * Update profile
- */
+// ===== SERVICES (Vendor) =====
+function openServiceModal(service = null) {
+    // Will be fully implemented with service form
+    Toast.info('Service management coming in full Module 4 implementation');
+}
+
+function editService(serviceId) {
+    Toast.info('Edit service coming soon');
+}
+
+async function deleteService(serviceId) {
+    if (!confirm('Delete this service?')) return;
+    try {
+        await ApiService.delete(`/services/${serviceId}`);
+        Toast.success('Service deleted');
+        await loadServices();
+    } catch (error) {
+        Toast.error(error.message);
+    }
+}
+
+// ===== PROFILE =====
 async function updateProfile(e) {
     e.preventDefault();
-    
     const profileData = {
         name: document.getElementById('profileName').value.trim(),
         phone: document.getElementById('profilePhone').value.trim()
     };
-    
-    if (!profileData.name) {
-        Toast.warning('Name is required');
-        return;
-    }
+    if (!profileData.name) { Toast.warning('Name is required'); return; }
     
     try {
         Helpers.showLoading();
         const response = await ApiService.put('/auth/profile', profileData);
-        
         if (response.success) {
             Toast.success('Profile updated!');
             const updatedUser = { ...currentUser, ...profileData };
             localStorage.setItem(CONFIG.STORAGE_KEYS.USER, JSON.stringify(updatedUser));
             currentUser = updatedUser;
-            
-            // Update displayed names
             document.getElementById('userName').textContent = updatedUser.name;
             document.getElementById('sidebarUserName').textContent = updatedUser.name;
-            const avatar = document.getElementById('userAvatar');
-            if (avatar) avatar.textContent = updatedUser.name.charAt(0).toUpperCase();
         }
     } catch (error) {
         Toast.error(error.message);
@@ -599,41 +603,24 @@ async function updateProfile(e) {
     }
 }
 
-/**
- * Change password
- */
 async function changePassword(e) {
     e.preventDefault();
-    
     const currentPassword = document.getElementById('currentPassword').value;
     const newPassword = document.getElementById('newPassword').value;
     const confirmNewPassword = document.getElementById('confirmNewPassword').value;
     
     if (!currentPassword || !newPassword || !confirmNewPassword) {
-        Toast.warning('All fields are required');
-        return;
+        Toast.warning('All fields required'); return;
     }
-    
-    if (newPassword.length < 8) {
-        Toast.warning('Password must be at least 8 characters');
-        return;
-    }
-    
-    if (newPassword !== confirmNewPassword) {
-        Toast.warning('Passwords do not match');
-        return;
-    }
+    if (newPassword.length < 8) { Toast.warning('Password too short'); return; }
+    if (newPassword !== confirmNewPassword) { Toast.warning('Passwords do not match'); return; }
     
     try {
         Helpers.showLoading();
         await ApiService.put('/auth/change-password', { currentPassword, newPassword });
         Toast.success('Password changed! Please login again.');
         document.getElementById('passwordForm').reset();
-        
-        setTimeout(() => {
-            ApiService.clearAuth();
-            window.location.href = 'login.html';
-        }, 1500);
+        setTimeout(() => { ApiService.clearAuth(); window.location.href = 'login.html'; }, 1500);
     } catch (error) {
         Toast.error(error.message);
     } finally {
@@ -641,10 +628,14 @@ async function changePassword(e) {
     }
 }
 
-// Make functions globally available
+// Global
+window.switchTab = switchTab;
 window.openEventModal = openEventModal;
 window.editEvent = editEvent;
 window.deleteEvent = deleteEvent;
 window.viewEvent = viewEvent;
 window.cancelRegistration = cancelRegistration;
-window.showQRCode = showQRCode;
+window.toggleVendorApproval = toggleVendorApproval;
+window.openServiceModal = openServiceModal;
+window.editService = editService;
+window.deleteService = deleteService;

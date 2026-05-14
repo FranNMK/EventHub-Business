@@ -66,7 +66,7 @@ class RegistrationController {
       const eventDate = new Date(event.date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       if (eventDate < today) {
         return res.status(400).json({
           success: false,
@@ -74,9 +74,9 @@ class RegistrationController {
         });
       }
 
-      // Check if already registered
+      // Check if already registered (include cancelled to allow re-registration)
       const [existing] = await pool.query(
-        "SELECT * FROM registrations WHERE event_id = ? AND user_id = ? AND status != 'cancelled'",
+        "SELECT * FROM registrations WHERE event_id = ? AND user_id = ? AND status = 'registered'",
         [eventId, req.user.id]
       );
 
@@ -87,6 +87,36 @@ class RegistrationController {
         });
       }
 
+      // Check if previously cancelled - allow re-registration
+      const [cancelled] = await pool.query(
+        "SELECT * FROM registrations WHERE event_id = ? AND user_id = ? AND status = 'cancelled'",
+        [eventId, req.user.id]
+      );
+
+      if (cancelled.length > 0) {
+        // Reactivate the cancelled registration
+        await pool.query(
+          "UPDATE registrations SET status = 'registered', cancellation_date = NULL, registration_date = NOW() WHERE id = ?",
+          [cancelled[0].id]
+        );
+
+        // Update available slots
+        await pool.query(
+          'UPDATE events SET available_slots = available_slots - 1 WHERE id = ? AND available_slots > 0',
+          [eventId]
+        );
+
+        const [registrations] = await pool.query(`
+        SELECT r.*, e.title as event_title, e.date as event_date
+        FROM registrations r JOIN events e ON r.event_id = e.id WHERE r.id = ?
+    `, [cancelled[0].id]);
+
+        return res.status(200).json({
+          success: true,
+          message: 'Successfully re-registered for the event',
+          data: registrations[0]
+        });
+      }
       // Check capacity
       if (event.available_slots <= 0) {
         return res.status(400).json({
