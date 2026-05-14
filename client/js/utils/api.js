@@ -39,15 +39,27 @@ class ApiService {
         try {
             const url = `${CONFIG.API_URL}${endpoint}`;
             
+            // Add timeout to prevent hanging requests
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+            
             const response = await fetch(url, {
                 ...options,
+                signal: controller.signal,
                 headers: {
                     ...this.getHeaders(options.body instanceof FormData),
                     ...options.headers
                 }
             });
 
-            const data = await response.json();
+            clearTimeout(timeoutId);
+            
+            let data;
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                throw new ApiError('Invalid response format from server', response.status);
+            }
 
             if (!response.ok) {
                 // Handle token expiration
@@ -67,6 +79,9 @@ class ApiService {
         } catch (error) {
             if (error instanceof ApiError) {
                 throw error;
+            }
+            if (error.name === 'AbortError') {
+                throw new ApiError('Request timeout. Please try again.', 0);
             }
             throw new ApiError('Network error. Please check your connection.', 0);
         }

@@ -319,9 +319,9 @@ select.form-control {
 .mb-4 { margin-bottom: var(--space-xl); }
 .mb-5 { margin-bottom: var(--space-2xl); }
 
-.d-none { display: none; }
-.d-flex { display: flex; }
-.d-grid { display: grid; }
+.d-none { display: none !important; }
+.d-flex { display: flex !important; }
+.d-grid { display: grid !important; }
 
 .align-items-center { align-items: center; }
 .justify-content-between { justify-content: space-between; }

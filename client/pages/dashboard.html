@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - EventHub Business</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-calendar-check"></i>
+                <span>EventHub Business</span>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span class="hamburger"></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html" class="nav-link">Home</a></li>
+                <li><a href="events.html" class="nav-link">Events</a></li>
+                <li><a href="vendors.html" class="nav-link">Vendors</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar Toggle Button (Mobile) -->
+    <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Dashboard Layout -->
+    <div class="dashboard-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="dashboard-sidebar" id="dashboardSidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-info">
+                        <h4 id="sidebarUserName">Admin User</h4>
+                        <span id="sidebarUserRole">administrator</span>
+                    </div>
+                </div>
+            </div>
+            
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="#" class="active" data-tab="events">
+                        <i class="fas fa-calendar-alt"></i> Events Management
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-tab="registrations">
+                        <i class="fas fa-clipboard-list"></i> My Registrations
+                    </a>
+                </li>
+                <li id="sidebarVendorsMenu" style="display:none;">
+                    <a href="#" data-tab="vendors">
+                        <i class="fas fa-store"></i> Vendor Management
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-tab="profile">
+                        <i class="fas fa-user-cog"></i> Profile Settings
+                    </a>
+                </li>
+                
+                <li class="sidebar-divider"></li>
+                
+                <li>
+                    <a href="../index.html">
+                        <i class="fas fa-home"></i> Back to Home
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="sidebarLogoutBtn" class="sidebar-logout">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <div class="dashboard-header">
+                <div class="welcome-text">
+                    <h1>Welcome back, <span id="userName">User</span></h1>
+                    <p id="dashboardSubtitle">Manage your events and track registrations</p>
+                </div>
+                <div class="header-actions" id="headerActions">
+                    <button class="btn btn-primary" id="createEventBtn">
+                        <i class="fas fa-plus"></i> Create Event
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="totalEventsStat">0</span>
+                        <span class="stat-label">Total Events</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-success">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="totalRegistrationsStat">0</span>
+                        <span class="stat-label">Registrations</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="upcomingEventsStat">0</span>
+                        <span class="stat-label">Upcoming</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-info">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="completedEventsStat">0</span>
+                        <span class="stat-label">Completed</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Events Tab -->
+                <div class="tab-pane active" id="eventsTab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Event Management</h3>
+                            <div class="header-actions">
+                                <select id="eventFilter" class="form-control form-control-sm">
+                                    <option value="all">All Events</option>
+                                    <option value="published">Published</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table id="eventsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Event</th>
+                                            <th>Date</th>
+                                            <th>Capacity</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="eventsTableBody">
+                                        <tr>
+                                            <td colspan="5" class="text-center">
+                                                <div class="spinner"></div> Loading events...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registrations Tab -->
+                <div class="tab-pane" id="registrationsTab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>My Event Registrations</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table id="registrationsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Event</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th>Registered On</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="registrationsTableBody">
+                                        <tr>
+                                            <td colspan="5" class="text-center">
+                                                <div class="spinner"></div> Loading registrations...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Tab -->
+                <div class="tab-pane" id="profileTab">
+                    <div class="profile-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Profile Information</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="profileForm">
+                                    <div class="form-group">
+                                        <label for="profileName" class="form-label">Full Name</label>
+                                        <input type="text" id="profileName" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="profileEmail" class="form-label">Email</label>
+                                        <input type="email" id="profileEmail" class="form-control" disabled>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="profilePhone" class="form-label">Phone</label>
+                                        <input type="tel" id="profilePhone" class="form-control" placeholder="+1234567890">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="profileRole" class="form-label">Role</label>
+                                        <input type="text" id="profileRole" class="form-control" disabled>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Update Profile
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Change Password</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="passwordForm">
+                                    <div class="form-group">
+                                        <label for="currentPassword" class="form-label">Current Password</label>
+                                        <input type="password" id="currentPassword" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="newPassword" class="form-label">New Password</label>
+                                        <input type="password" id="newPassword" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="confirmNewPassword" class="form-label">Confirm New Password</label>
+                                        <input type="password" id="confirmNewPassword" class="form-control" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-key"></i> Change Password
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Event Creation Modal -->
+    <div class="modal-overlay d-none" id="eventModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="eventModalTitle">Create New Event</h3>
+                <button class="modal-close" id="closeEventModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="eventForm">
+                    <div class="form-group">
+                        <label for="eventTitle" class="form-label">Event Title *</label>
+                        <input type="text" id="eventTitle" class="form-control" placeholder="Annual Company Meetup" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="eventDescription" class="form-label">Description</label>
+                        <textarea id="eventDescription" class="form-control" rows="3" placeholder="Event details..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eventDate" class="form-label">Date *</label>
+                            <input type="date" id="eventDate" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="eventTime" class="form-label">Time</label>
+                            <input type="time" id="eventTime" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="eventLocation" class="form-label">Location *</label>
+                        <input type="text" id="eventLocation" class="form-control" placeholder="Conference Room A" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="eventCapacity" class="form-label">Capacity *</label>
+                        <input type="number" id="eventCapacity" class="form-control" min="1" placeholder="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="eventStatus" class="form-label">Status</label>
+                        <select id="eventStatus" class="form-control">
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="eventId">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelEventBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveEventBtn">Create Event</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="../js/utils/config.js"></script>
+    <script src="../js/utils/helpers.js"></script>
+    <script src="../js/utils/api.js"></script>
+    <script src="../js/components/navigation.js"></script>
+    <script src="../js/components/toast.js"></script>
+    <script src="../js/pages/dashboard.js"></script>
+</body>
+</html>

@@ -80,9 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     redirectByRole(response.data.user.role);
                 }, 1000);
+            } else {
+                showError(response.message || 'Registration failed. Please try again.');
             }
         } catch (error) {
-            showError(error.message);
+            console.error('Registration error:', error);
+            const errorMsg = error.message || 'An error occurred during registration. Please try again.';
+            showError(errorMsg);
         } finally {
             setLoadingState(false);
         }
@@ -246,10 +250,12 @@ function showError(message) {
     const errorEl = document.getElementById('registerError');
     errorEl.textContent = message;
     errorEl.classList.remove('d-none');
+    console.error('Registration form error:', message);
     
+    // Keep error visible for 8 seconds
     setTimeout(() => {
         errorEl.classList.add('d-none');
-    }, 5000);
+    }, 8000);
 }
 
 /**

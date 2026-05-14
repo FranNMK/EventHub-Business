@@ -12,9 +12,6 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Import routes
-const authRoutes = require('./routes/auth');
-
 // Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
@@ -37,7 +34,12 @@ if (process.env.NODE_ENV === 'development') {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// API Routes (to be added in subsequent modules)
+// Import routes
+const authRoutes = require('./routes/auth');
+const eventRoutes = require('./routes/events');
+const registrationRoutes = require('./routes/registrations');
+
+// API Routes
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
@@ -50,6 +52,12 @@ app.get('/api/health', (req, res) => {
 // Auth routes
 app.use('/api/auth', authRoutes);
 
+// Event routes
+app.use('/api/events', eventRoutes);
+
+// Registration routes
+app.use('/api/registrations', registrationRoutes);
+
 // 404 handler for undefined routes
 app.use((req, res) => {
   res.status(404).json({
@@ -57,13 +65,13 @@ app.use((req, res) => {
     message: `Route ${req.originalUrl} not found`
   });
 });
+
 // Global error handler
 app.use(errorHandler);
 
 // Initialize database and start server
 const startServer = async () => {
   try {
-    // Test database connection
     const isConnected = await testConnection();
     
     if (!isConnected) {
@@ -71,10 +79,8 @@ const startServer = async () => {
       process.exit(1);
     }
 
-    // Initialize database tables
     await initializeDatabase();
 
-    // Start server
     app.listen(PORT, () => {
       console.log(`✅ ${process.env.APP_NAME || 'EventHub Business'} server running on port ${PORT}`);
       console.log(`📝 Environment: ${process.env.NODE_ENV}`);
@@ -87,7 +93,6 @@ const startServer = async () => {
   }
 };
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err);
   process.exit(1);
