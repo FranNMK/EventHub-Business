@@ -73,6 +73,13 @@
     }
 }
 
+/* Desktop Navigation (768px and up) */
+@media screen and (min-width: 768px) {
+    .nav-menu {
+        display: flex;
+    }
+}
+
 /* Mobile Navigation (max-width: 767px) */
 @media screen and (max-width: 767px) {
     /* Show hamburger menu */
@@ -80,28 +87,30 @@
         display: flex;
     }
     
-    /* Mobile menu styling */
+    /* Hide menu by default on mobile */
     .nav-menu {
+        display: none;
+    }
+    
+    /* Mobile menu styling when active */
+    .nav-menu.active {
+        display: flex;
         position: fixed;
         top: 0;
-        right: -100%;
+        right: 0;
         width: 280px;
         height: 100vh;
         background-color: var(--white);
         flex-direction: column;
         padding: 5rem 1.5rem 2rem;
         box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
-        transition: right 0.3s ease-in-out;
         gap: 0.25rem;
         overflow-y: auto;
-    }
-    
-    .nav-menu.active {
-        right: 0;
+        z-index: 999;
     }
     
     /* Overlay when menu is open */
-    .nav-menu::before {
+    .nav-menu.active::before {
         content: '';
         position: fixed;
         top: 0;
@@ -109,29 +118,31 @@
         width: 100%;
         height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
-        z-index: -1;
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out;
-        pointer-events: none;
-    }
-    
-    .nav-menu.active::before {
+        z-index: 998;
         opacity: 1;
         pointer-events: auto;
     }
     
+    .nav-menu li {
+        width: 100%;
+    }
+    
     .nav-menu .nav-link {
+        display: block;
         width: 100%;
         padding: 0.75rem 1rem;
         font-size: var(--font-size-base);
         border-radius: var(--radius-md);
+        text-decoration: none;
     }
     
     .nav-menu .btn-login,
     .nav-menu .btn-register {
+        display: block;
         text-align: center;
         justify-content: center;
         margin-top: 0.5rem;
+        padding: 0.75rem 1rem;
     }
     
     .hero {
@@ -154,8 +165,8 @@
 
 /* Mobile landscape adjustments */
 @media screen and (max-width: 767px) and (orientation: landscape) {
-    .nav-menu {
-        padding: 4rem 1.5rem 2rem;
+    .nav-menu.active {
+        padding: 3.5rem 1.5rem 2rem;
         width: 320px;
     }
     

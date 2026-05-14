@@ -115,8 +115,9 @@ class Navigation {
      * Update navigation based on auth state
      */
     static updateAuthState() {
-        const isAuth = ApiService.isAuthenticated();
-        const user = ApiService.getCurrentUser();
+        // Check if ApiService is available
+        const isAuth = typeof ApiService !== 'undefined' && ApiService.isAuthenticated();
+        const user = typeof ApiService !== 'undefined' ? ApiService.getCurrentUser() : null;
 
         const navLogin = document.getElementById('navLogin');
         const navRegister = document.getElementById('navRegister');

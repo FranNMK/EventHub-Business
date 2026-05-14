@@ -33,7 +33,6 @@
 
 /* Desktop Navigation */
 .nav-menu {
-    display: flex;
     list-style: none;
     align-items: center;
     gap: 0.5rem;
