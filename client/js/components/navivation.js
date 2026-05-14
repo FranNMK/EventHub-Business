@@ -113,45 +113,42 @@ class Navigation {
     }
 
     /**
-     * Update navigation based on auth state
-     */
-    static updateAuthState() {
-        // Check if ApiService is available
-        const isAuth = typeof ApiService !== 'undefined' && ApiService.isAuthenticated();
-        const user = typeof ApiService !== 'undefined' ? ApiService.getCurrentUser() : null;
+ * Update navigation based on auth state
+ */
+static updateAuthState() {
+    const isAuth = ApiService.isAuthenticated();
+    const user = ApiService.getCurrentUser();
 
-        const navLogin = document.getElementById('navLogin');
-        const navRegister = document.getElementById('navRegister');
-        const navDashboard = document.getElementById('navDashboard');
-        const navLogout = document.getElementById('navLogout');
+    const navLogin = document.getElementById('navLogin');
+    const navRegister = document.getElementById('navRegister');
+    const navDashboard = document.getElementById('navDashboard');
+    const navLogout = document.getElementById('navLogout');
 
-        if (isAuth && user) {
-            // Hide login/register
-            if (navLogin) navLogin.style.display = 'none';
-            if (navRegister) navRegister.style.display = 'none';
-            
-            // Show dashboard and logout
-            if (navDashboard) {
-                navDashboard.style.display = 'block';
-                const link = navDashboard.querySelector('a');
-                if (link) {
-                    const roleLabel = user.role === 'admin' ? 'Admin' : 'My';
-                    link.textContent = `${roleLabel} Dashboard`;
-                    link.href = '../pages/dashboard.html';
-                }
+    if (isAuth && user) {
+        // Hide login/register
+        if (navLogin) navLogin.style.display = 'none';
+        if (navRegister) navRegister.style.display = 'none';
+        
+        // Show dashboard for ALL roles
+        if (navDashboard) {
+            navDashboard.style.display = 'block';
+            const link = navDashboard.querySelector('a');
+            if (link) {
+                link.textContent = 'Dashboard';
+                link.href = 'dashboard.html';
             }
-            if (navLogout) navLogout.style.display = 'block';
-        } else {
-            // Show login/register
-            if (navLogin) navLogin.style.display = 'block';
-            if (navRegister) navRegister.style.display = 'block';
-            
-            // Hide dashboard and logout
-            if (navDashboard) navDashboard.style.display = 'none';
-            if (navLogout) navLogout.style.display = 'none';
         }
+        if (navLogout) navLogout.style.display = 'block';
+    } else {
+        // Show login/register
+        if (navLogin) navLogin.style.display = 'block';
+        if (navRegister) navRegister.style.display = 'block';
+        
+        // Hide dashboard and logout
+        if (navDashboard) navDashboard.style.display = 'none';
+        if (navLogout) navLogout.style.display = 'none';
     }
-
+}
     /**
      * Setup logout functionality
      */

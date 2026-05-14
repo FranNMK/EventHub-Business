@@ -35,7 +35,6 @@ function setupEventListeners() {
     // Register button in modal
     document.getElementById('registerEventBtn')?.addEventListener('click', registerForEvent);
 }
-
 /**
  * Load events from API
  */
@@ -44,31 +43,106 @@ async function loadEvents() {
         const search = document.getElementById('eventSearch')?.value || '';
         const status = document.getElementById('statusFilter')?.value || 'all';
         
-        let endpoint = `/events?page=${currentPage}&limit=9`;
-        if (status !== 'all') endpoint += `&status=${status}`;
-        if (search) endpoint += `&search=${encodeURIComponent(search)}`;
+        // If authenticated, use API
+        if (ApiService.isAuthenticated()) {
+            let endpoint = `/events?page=${currentPage}&limit=9`;
+            if (status !== 'all') endpoint += `&status=${status}`;
+            if (search) endpoint += `&search=${encodeURIComponent(search)}`;
 
-        const response = await ApiService.get(endpoint);
-        
-        if (response.success) {
-            renderEvents(response.data);
-            totalPages = response.pagination?.pages || 1;
-            renderPagination();
+            const response = await ApiService.get(endpoint);
+            
+            if (response.success) {
+                renderEvents(response.data);
+                totalPages = response.pagination?.pages || 1;
+                renderPagination();
+            }
+        } else {
+            // If not authenticated, show sample events
+            renderSampleEvents();
         }
     } catch (error) {
         console.error('Failed to load events:', error);
-        // If not authenticated, show login prompt
-        if (error.statusCode === 401) {
-            document.getElementById('eventsGrid').innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-lock"></i>
-                    <h3>Please Login</h3>
-                    <p>You need to login to view events.</p>
-                    <a href="login.html" class="btn btn-primary">Login</a>
-                </div>
-            `;
-        }
+        // Show sample events as fallback
+        renderSampleEvents();
     }
+}
+
+/**
+ * Render sample events for non-authenticated users
+ */
+function renderSampleEvents() {
+    const sampleEvents = [
+        {
+            id: 1,
+            title: 'Annual General Meeting 2026',
+            description: 'Join us for the Annual General Meeting 2026, a cornerstone event where leadership, stakeholders, and employees come together to reflect on achievements and discuss strategic initiatives.',
+            date: '2026-06-15',
+            time: '09:00:00',
+            location: 'Grand Conference Hall, 5th Floor, Headquarters',
+            capacity: 250,
+            available_slots: 180,
+            status: 'published'
+        },
+        {
+            id: 2,
+            title: 'Tech Innovation Summit 2026',
+            description: 'Join industry leaders, tech enthusiasts, and innovators for a transformative day of learning, networking, and hands-on exploration at the annual Tech Innovation Summit.',
+            date: '2026-08-20',
+            time: '08:30:00',
+            location: 'Innovation Convention Center, 200 Tech Park Drive',
+            capacity: 500,
+            available_slots: 320,
+            status: 'published'
+        },
+        {
+            id: 3,
+            title: 'Team Building Retreat',
+            description: 'A fun-filled day of team building activities, workshops, and outdoor adventures designed to strengthen collaboration and boost morale.',
+            date: '2026-07-10',
+            time: '10:00:00',
+            location: 'Adventure Park Resort, Lakeside',
+            capacity: 100,
+            available_slots: 45,
+            status: 'published'
+        },
+        {
+            id: 4,
+            title: 'Leadership Workshop Series',
+            description: 'Monthly leadership development workshop focusing on emotional intelligence, strategic thinking, and effective communication.',
+            date: '2026-09-05',
+            time: '14:00:00',
+            location: 'Training Room B, 3rd Floor',
+            capacity: 30,
+            available_slots: 12,
+            status: 'published'
+        },
+        {
+            id: 5,
+            title: 'End of Year Gala Dinner',
+            description: 'Celebrate the achievements of the year with an elegant gala dinner, awards ceremony, and live entertainment.',
+            date: '2026-12-20',
+            time: '18:00:00',
+            location: 'Grand Ballroom, The Ritz Hotel',
+            capacity: 300,
+            available_slots: 200,
+            status: 'published'
+        },
+        {
+            id: 6,
+            title: 'Health & Wellness Fair',
+            description: 'A comprehensive health fair featuring free check-ups, fitness demonstrations, nutrition workshops, and wellness resources.',
+            date: '2026-11-15',
+            time: '09:00:00',
+            location: 'Company Sports Complex',
+            capacity: 200,
+            available_slots: 150,
+            status: 'published'
+        }
+    ];
+
+    renderEvents(sampleEvents);
+    totalPages = 1;
+    document.getElementById('pagination').innerHTML = '';
 }
 
 /**
@@ -82,10 +156,9 @@ function renderEvents(events) {
         grid.innerHTML = '';
         emptyState.classList.remove('d-none');
         return;
-    }
-
-    emptyState.classList.add('d-none');
-
+    }renderEvents(events) {
+    // ... keep the beginning of the function the same ...
+    
     grid.innerHTML = events.map(event => `
         <div class="event-card">
             <div class="event-card-image">
@@ -118,11 +191,11 @@ function renderEvents(events) {
                 </div>
                 
                 <div class="event-card-footer">
-                    <button class="btn btn-outline btn-sm" onclick="showEventDetail(${event.id})">
+                    <a href="event-detail.html?id=${event.id}" class="btn btn-outline btn-sm">
                         <i class="fas fa-info-circle"></i> Details
-                    </button>
-                    ${event.status === 'published' && ApiService.isAuthenticated() ? `
-                        <button class="btn btn-primary btn-sm" onclick="quickRegister(${event.id})">
+                    </a>
+                    ${event.status === 'published' ? `
+                        <button class="btn btn-primary btn-sm" onclick="handleRegisterClick(${event.id})">
                             <i class="fas fa-ticket-alt"></i> Register
                         </button>
                     ` : ''}
@@ -130,6 +203,24 @@ function renderEvents(events) {
             </div>
         </div>
     `).join('');
+}
+
+/**
+ * Handle register button click - redirects to login if not authenticated
+ */
+function handleRegisterClick(eventId) {
+    if (!ApiService.isAuthenticated()) {
+        Toast.warning('Please login to register for events');
+        // Store the event ID to redirect back after login
+        sessionStorage.setItem('redirectAfterLogin', `event-detail.html?id=${eventId}`);
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 1000);
+        return;
+    }
+    
+    // If authenticated, show detail modal with registration
+    showEventDetail(eventId);
 }
 
 /**

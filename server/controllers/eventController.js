@@ -13,7 +13,7 @@ class EventController {
   static async getAllEvents(req, res, next) {
     try {
       const { status, search, page = 1, limit = 10 } = req.query;
-      
+
       let query = `
         SELECT e.*, u.name as creator_name,
         (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status != 'cancelled') as registration_count
@@ -60,7 +60,7 @@ class EventController {
       // Get total count for pagination
       let countQuery = 'SELECT COUNT(*) as total FROM events WHERE 1=1';
       const countParams = [];
-      
+
       if (status && status !== 'all') {
         countQuery += ' AND status = ?';
         countParams.push(status);
@@ -161,7 +161,7 @@ class EventController {
       const eventDate = new Date(date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       if (eventDate < today) {
         return res.status(400).json({
           success: false,
@@ -370,6 +370,75 @@ class EventController {
     } catch (error) {
       next(error);
     }
+  }
+}
+
+/**
+ * Get public events (no auth required)
+ * GET /api/events/public
+ */
+static async getPublicEvents(req, res, next) {
+  try {
+    const { search, page = 1, limit = 9 } = req.query;
+
+    let query = `
+            SELECT e.*, u.name as creator_name,
+            (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status != 'cancelled') as registration_count
+            FROM events e
+            LEFT JOIN users u ON e.created_by = u.id
+            WHERE e.status = 'published'
+        `;
+    const params = [];
+
+    if (search) {
+      query += ' AND (e.title LIKE ? OR e.location LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
+
+    query += ' ORDER BY e.date DESC';
+
+    const offset = (page - 1) * limit;
+    query += ' LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+
+    const [events] = await pool.query(query, params);
+
+    // Get total count
+    let countQuery = "SELECT COUNT(*) as total FROM events WHERE status = 'published'";
+    const countParams = [];
+    if (search) {
+      countQuery += ' AND (title LIKE ? OR location LIKE ?)';
+      countParams.push(`%${search}%`, `%${search}%`);
+    }
+    const [countResult] = await pool.query(countQuery, countParams);
+
+    // Remove sensitive data
+    const sanitizedEvents = events.map(event => ({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      date: event.date,
+      time: event.time,
+      location: event.location,
+      capacity: event.capacity,
+      available_slots: event.available_slots,
+      status: event.status,
+      registration_count: event.registration_count
+    }));
+
+    res.json({
+      success: true,
+      data: sanitizedEvents,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: countResult[0].total,
+        pages: Math.ceil(countResult[0].total / limit)
+      }
+    });
+
+  } catch (error) {
+    next(error);
   }
 }
 

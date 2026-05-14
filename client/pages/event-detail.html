@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Details - EventHub Business</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/event-detail.css">
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-calendar-check"></i>
+                <span>EventHub Business</span>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span class="hamburger"></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html" class="nav-link">Home</a></li>
+                <li><a href="events.html" class="nav-link active">Events</a></li>
+                <li><a href="vendors.html" class="nav-link">Vendors</a></li>
+                <li id="navDashboard" style="display:none;"><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+                <li id="navLogin"><a href="login.html" class="nav-link btn-login">Login</a></li>
+                <li id="navRegister"><a href="register.html" class="nav-link btn-register">Register</a></li>
+                <li id="navLogout" style="display:none;"><a href="#" class="nav-link" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="event-detail-container">
+        <!-- Loading State -->
+        <div class="loading-state" id="loadingState">
+            <div class="spinner spinner-lg"></div>
+            <p>Loading event details...</p>
+        </div>
+
+        <!-- Event Content (Hidden initially) -->
+        <div class="d-none" id="eventContent">
+            <!-- Hero Banner -->
+            <div class="event-hero">
+                <div class="event-hero-overlay"></div>
+                <div class="container">
+                    <div class="event-hero-content">
+                        <div class="breadcrumb">
+                            <a href="events.html"><i class="fas fa-arrow-left"></i> Back to Events</a>
+                        </div>
+                        <span class="event-status-badge" id="heroStatus"></span>
+                        <h1 class="event-title" id="heroTitle"></h1>
+                        <div class="event-quick-info">
+                            <div class="quick-info-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <div>
+                                    <span class="info-label">Date</span>
+                                    <span class="info-value" id="heroDate"></span>
+                                </div>
+                            </div>
+                            <div class="quick-info-item">
+                                <i class="fas fa-clock"></i>
+                                <div>
+                                    <span class="info-label">Time</span>
+                                    <span class="info-value" id="heroTime"></span>
+                                </div>
+                            </div>
+                            <div class="quick-info-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <div>
+                                    <span class="info-label">Location</span>
+                                    <span class="info-value" id="heroLocation"></span>
+                                </div>
+                            </div>
+                            <div class="quick-info-item">
+                                <i class="fas fa-users"></i>
+                                <div>
+                                    <span class="info-label">Capacity</span>
+                                    <span class="info-value" id="heroCapacity"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="event-detail-layout">
+                    <!-- Main Content -->
+                    <div class="event-main">
+                        <!-- About Section -->
+                        <section class="detail-section">
+                            <h2><i class="fas fa-info-circle"></i> About This Event</h2>
+                            <div class="event-description" id="eventDescription"></div>
+                        </section>
+
+                        <!-- Schedule Section -->
+                        <section class="detail-section">
+                            <h2><i class="fas fa-list-ul"></i> Event Schedule</h2>
+                            <div class="schedule-timeline" id="eventSchedule">
+                                <div class="timeline-item">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <h4>Check-in & Registration</h4>
+                                        <p class="text-muted">30 minutes before event start</p>
+                                        <p>Arrive early to complete registration and receive your event materials.</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <h4>Main Event</h4>
+                                        <p class="text-muted" id="scheduleTime"></p>
+                                        <p>The main event activities as described in the event details.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Registration List (Admin Only) -->
+                        <section class="detail-section admin-only d-none" id="registrationListSection">
+                            <h2><i class="fas fa-clipboard-list"></i> Registered Attendees</h2>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Status</th>
+                                            <th>Registered Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="attendeesTableBody">
+                                        <tr>
+                                            <td colspan="4" class="text-center">Loading attendees...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <aside class="event-sidebar">
+                        <!-- Registration Card -->
+                        <div class="sidebar-card registration-card" id="registrationCard">
+                            <div class="card-header">
+                                <h3>Registration</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="registration-status" id="registrationStatus">
+                                    <!-- Dynamic content based on auth/registration state -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Event Info Card -->
+                        <div class="sidebar-card">
+                            <div class="card-header">
+                                <h3>Event Details</h3>
+                            </div>
+                            <div class="card-body">
+                                <ul class="info-list">
+                                    <li>
+                                        <i class="fas fa-calendar-check"></i>
+                                        <div>
+                                            <span class="info-label">Date & Time</span>
+                                            <span id="sidebarDateTime"></span>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-map-pin"></i>
+                                        <div>
+                                            <span class="info-label">Venue</span>
+                                            <span id="sidebarLocation"></span>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-user-tie"></i>
+                                        <div>
+                                            <span class="info-label">Organizer</span>
+                                            <span id="sidebarOrganizer"></span>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-ticket-alt"></i>
+                                        <div>
+                                            <span class="info-label">Available Slots</span>
+                                            <span id="sidebarSlots"></span>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Share Card -->
+                        <div class="sidebar-card">
+                            <div class="card-header">
+                                <h3>Share Event</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="share-buttons">
+                                    <button class="share-btn" onclick="shareEvent('email')" title="Share via Email">
+                                        <i class="fas fa-envelope"></i>
+                                    </button>
+                                    <button class="share-btn" onclick="shareEvent('copy')" title="Copy Link">
+                                        <i class="fas fa-link"></i>
+                                    </button>
+                                    <button class="share-btn" onclick="shareEvent('twitter')" title="Share on Twitter">
+                                        <i class="fab fa-twitter"></i>
+                                    </button>
+                                    <button class="share-btn" onclick="shareEvent('linkedin')" title="Share on LinkedIn">
+                                        <i class="fab fa-linkedin"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state d-none" id="errorState">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h2>Event Not Found</h2>
+            <p id="errorMessage">The event you're looking for doesn't exist or has been removed.</p>
+            <a href="events.html" class="btn btn-primary">Browse Events</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 EventHub Business. ICT Skills Competition Project.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="../js/utils/config.js"></script>
+    <script src="../js/utils/helpers.js"></script>
+    <script src="../js/utils/api.js"></script>
+    <script src="../js/components/navigation.js"></script>
+    <script src="../js/components/toast.js"></script>
+    <script src="../js/pages/event-detail.js"></script>
+</body>
+</html>

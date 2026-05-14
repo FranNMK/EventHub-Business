@@ -8,7 +8,10 @@ const { authenticateToken, authorizeRoles } = require('../middleware/auth');
  * Base: /api/events
  */
 
-// All authenticated users can view events
+// Public route - anyone can view published events
+router.get('/public', EventController.getPublicEvents);
+
+// Authenticated users can view all events
 router.get('/', authenticateToken, EventController.getAllEvents);
 router.get('/:id', authenticateToken, EventController.getEventById);
 

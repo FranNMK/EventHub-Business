@@ -23,9 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDashboardData();
 });
 
-/**
- * Initialize dashboard
- */
 function initDashboard() {
     // Set user info
     document.getElementById('userName').textContent = currentUser.name || 'User';
@@ -38,22 +35,55 @@ function initDashboard() {
         avatar.textContent = currentUser.name.charAt(0).toUpperCase();
     }
     
-    // Show/hide admin features
+    // Role-based UI adjustments
     const createEventBtn = document.getElementById('createEventBtn');
     const sidebarVendorsMenu = document.getElementById('sidebarVendorsMenu');
+    const headerActions = document.getElementById('headerActions');
     
     if (currentUser.role === 'admin') {
+        // Admin: Full access
         if (createEventBtn) createEventBtn.style.display = 'inline-flex';
         if (sidebarVendorsMenu) sidebarVendorsMenu.style.display = 'block';
-        document.getElementById('dashboardSubtitle').textContent = 'Manage your events, vendors, and registrations';
+        document.getElementById('dashboardSubtitle').textContent = 'Manage events, vendors, and track registrations';
+        document.getElementById('eventFilter').style.display = 'inline-block';
+        
     } else if (currentUser.role === 'vendor') {
+        // Vendor: Can manage their services, view events
         if (createEventBtn) createEventBtn.style.display = 'none';
         if (sidebarVendorsMenu) sidebarVendorsMenu.style.display = 'block';
-        document.getElementById('dashboardSubtitle').textContent = 'Manage your services and track bookings';
+        document.getElementById('dashboardSubtitle').textContent = 'Manage your services and view event bookings';
+        
+        // Change create event button to add service button
+        if (headerActions) {
+            headerActions.innerHTML = `
+                <button class="btn btn-primary" onclick="window.location.href='vendor-services.html'">
+                    <i class="fas fa-plus"></i> Add Service
+                </button>
+            `;
+        }
+        
+        // Hide event filter for vendors (they only see published events)
+        const eventFilter = document.getElementById('eventFilter');
+        if (eventFilter) eventFilter.style.display = 'none';
+        
     } else {
+        // Employee: Can browse events and manage registrations
         if (createEventBtn) createEventBtn.style.display = 'none';
         if (sidebarVendorsMenu) sidebarVendorsMenu.style.display = 'none';
-        document.getElementById('dashboardSubtitle').textContent = 'Browse events and track your registrations';
+        document.getElementById('dashboardSubtitle').textContent = 'Browse events and manage your registrations';
+        
+        // Change create event button to browse events button
+        if (headerActions) {
+            headerActions.innerHTML = `
+                <button class="btn btn-primary" onclick="window.location.href='events.html'">
+                    <i class="fas fa-search"></i> Browse Events
+                </button>
+            `;
+        }
+        
+        // Hide event filter and show only published events
+        const eventFilter = document.getElementById('eventFilter');
+        if (eventFilter) eventFilter.style.display = 'none';
     }
     
     // Load profile data

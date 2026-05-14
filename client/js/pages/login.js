@@ -95,6 +95,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+
+// Form submission
+loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // ... validation code ...
+
+    try {
+        const response = await ApiService.post('/auth/login', {
+            email: emailInput.value.trim(),
+            password: passwordInput.value
+        });
+
+        if (response.success) {
+            // Store tokens and user data
+            localStorage.setItem(CONFIG.STORAGE_KEYS.TOKEN, response.data.token);
+            localStorage.setItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN, response.data.refreshToken);
+            localStorage.setItem(CONFIG.STORAGE_KEYS.USER, JSON.stringify(response.data.user));
+
+            Toast.success('Login successful! Redirecting...');
+            
+            // Check if there's a redirect URL stored
+            const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+            
+            setTimeout(() => {
+                if (redirectUrl) {
+                    sessionStorage.removeItem('redirectAfterLogin');
+                    window.location.href = redirectUrl;
+                } else {
+                    redirectByRole(response.data.user.role);
+                }
+            }, 1000);
+        }
+    } catch (error) {
+        showError(error.message);
+    } finally {
+        setLoadingState(false);
+    }
+});
+
 /**
  * Validate email field
  */
@@ -194,12 +234,11 @@ function redirectByRole(role) {
             window.location.href = 'dashboard.html';
             break;
         case 'vendor':
-            window.location.href = 'vendor-dashboard.html';
+            window.location.href = 'dashboard.html';
             break;
         case 'employee':
-            window.location.href = 'events.html';
-            break;
         default:
-            window.location.href = '../index.html';
+            window.location.href = 'dashboard.html';
+            break;
     }
 }
