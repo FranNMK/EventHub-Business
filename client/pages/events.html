@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events - EventHub Business</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/events.css">
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-calendar-check"></i>
+                <span>EventHub Business</span>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span class="hamburger"></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html" class="nav-link">Home</a></li>
+                <li><a href="events.html" class="nav-link active">Events</a></li>
+                <li><a href="vendors.html" class="nav-link">Vendors</a></li>
+                <li id="navDashboard" style="display:none;"><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+                <li id="navLogin"><a href="login.html" class="nav-link btn-login">Login</a></li>
+                <li id="navRegister"><a href="register.html" class="nav-link btn-register">Register</a></li>
+                <li id="navLogout" style="display:none;"><a href="#" class="nav-link" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="events-container">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="header-content">
+                    <h1>Corporate Events</h1>
+                    <p>Discover and register for upcoming company events</p>
+                </div>
+                <div class="header-actions">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="eventSearch" class="form-control" placeholder="Search events...">
+                    </div>
+                    <select id="statusFilter" class="form-control">
+                        <option value="all">All Events</option>
+                        <option value="published">Upcoming</option>
+                        <option value="completed">Past Events</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Events Grid -->
+            <div class="events-grid" id="eventsGrid">
+                <!-- Event cards will be rendered here -->
+                <div class="loading-state">
+                    <div class="spinner spinner-lg"></div>
+                    <p>Loading events...</p>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state d-none" id="emptyState">
+                <i class="fas fa-calendar-times"></i>
+                <h3>No Events Found</h3>
+                <p>There are no events matching your criteria.</p>
+                <button class="btn btn-outline" onclick="resetFilters()">Reset Filters</button>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <!-- Pagination buttons will be rendered here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Event Detail Modal -->
+    <div class="modal-overlay d-none" id="eventDetailModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 id="detailEventTitle">Event Details</h3>
+                <button class="modal-close" id="closeDetailModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="event-detail-content">
+                    <div class="event-detail-main">
+                        <div class="event-detail-meta">
+                            <span class="meta-item">
+                                <i class="fas fa-calendar"></i>
+                                <span id="detailDate"></span>
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span id="detailTime"></span>
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span id="detailLocation"></span>
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-users"></i>
+                                <span id="detailCapacity"></span>
+                            </span>
+                        </div>
+                        <div class="event-detail-description" id="detailDescription"></div>
+                    </div>
+                    <div class="event-detail-sidebar">
+                        <div class="detail-card">
+                            <h4>Registration</h4>
+                            <span class="badge" id="detailStatus"></span>
+                            <p class="slots-info" id="detailSlots"></p>
+                            <button class="btn btn-primary btn-block" id="registerEventBtn">
+                                <i class="fas fa-ticket-alt"></i> Register Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="../js/utils/config.js"></script>
+    <script src="../js/utils/helpers.js"></script>
+    <script src="../js/utils/api.js"></script>
+    <script src="../js/components/navigation.js"></script>
+    <script src="../js/components/toast.js"></script>
+    <script src="../js/pages/events.js"></script>
+</body>
+</html>

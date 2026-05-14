@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendors - EventHub Business</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/vendors.css">
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-calendar-check"></i>
+                <span>EventHub Business</span>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span class="hamburger"></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html" class="nav-link">Home</a></li>
+                <li><a href="events.html" class="nav-link">Events</a></li>
+                <li><a href="vendors.html" class="nav-link active">Vendors</a></li>
+                <li id="navDashboard" style="display:none;"><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+                <li id="navLogin"><a href="login.html" class="nav-link btn-login">Login</a></li>
+                <li id="navRegister"><a href="register.html" class="nav-link btn-register">Register</a></li>
+                <li id="navLogout" style="display:none;"><a href="#" class="nav-link" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="vendors-container">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="header-content">
+                    <h1>Our Vendors</h1>
+                    <p>Discover trusted service providers for your corporate events</p>
+                </div>
+                <div class="header-actions">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="vendorSearch" class="form-control" placeholder="Search vendors...">
+                    </div>
+                    <select id="serviceFilter" class="form-control">
+                        <option value="all">All Services</option>
+                        <option value="catering">Catering</option>
+                        <option value="photography">Photography</option>
+                        <option value="decoration">Decoration</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="technology">Technology</option>
+                        <option value="transportation">Transportation</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Stats Banner -->
+            <div class="vendors-stats">
+                <div class="stat-item">
+                    <i class="fas fa-store"></i>
+                    <span class="stat-number" id="totalVendors">0</span>
+                    <span class="stat-label">Verified Vendors</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span class="stat-number" id="approvedVendors">0</span>
+                    <span class="stat-label">Approved</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-tags"></i>
+                    <span class="stat-number" id="totalServices">0</span>
+                    <span class="stat-label">Services Available</span>
+                </div>
+            </div>
+
+            <!-- Vendors Grid -->
+            <div class="vendors-grid" id="vendorsGrid">
+                <div class="loading-state">
+                    <div class="spinner spinner-lg"></div>
+                    <p>Loading vendors...</p>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state d-none" id="emptyState">
+                <i class="fas fa-store-slash"></i>
+                <h3>No Vendors Found</h3>
+                <p>No vendors match your search criteria.</p>
+                <button class="btn btn-outline" onclick="resetFilters()">Reset Filters</button>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="../js/utils/config.js"></script>
+    <script src="../js/utils/helpers.js"></script>
+    <script src="../js/utils/api.js"></script>
+    <script src="../js/components/navigation.js"></script>
+    <script src="../js/components/toast.js"></script>
+    <script src="../js/pages/vendors.js"></script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+/* ============================================
+   Vendors Page Styles
+   ============================================ */
+
+.vendors-container {
+    padding: var(--space-xl) 0;
+    min-height: calc(100vh - 70px);
+    background-color: var(--gray-100);
+}
+
+/* Vendors Stats Banner */
+.vendors-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-lg);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+}
+
+.vendors-stats .stat-item {
+    text-align: center;
+    color: var(--white);
+}
+
+.vendors-stats .stat-item i {
+    font-size: 2rem;
+    margin-bottom: var(--space-sm);
+    opacity: 0.8;
+}
+
+.vendors-stats .stat-number {
+    display: block;
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    margin-bottom: var(--space-xs);
+}
+
+.vendors-stats .stat-label {
+    font-size: var(--font-size-sm);
+    opacity: 0.9;
+}
+
+/* Vendors Grid */
+.vendors-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+}
+
+/* Vendor Card */
+.vendor-card {
+    background-color: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-fast);
+    border: 1px solid var(--gray-200);
+}
+
+.vendor-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.vendor-card-header {
+    padding: var(--space-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: linear-gradient(to right, #f7fafc, white);
+}
+
+.vendor-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--white);
+    flex-shrink: 0;
+}
+
+.vendor-info {
+    flex: 1;
+}
+
+.vendor-name {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    margin-bottom: var(--space-xs);
+    color: var(--dark);
+}
+
+.vendor-type {
+    display: inline-block;
+    padding: 0.2rem 0.75rem;
+    background-color: var(--gray-100);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.vendor-card-body {
+    padding: var(--space-lg);
+}
+
+.vendor-description {
+    color: var(--gray-600);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-md);
+    line-height: 1.6;
+}
+
+.vendor-contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+    font-size: var(--font-size-xs);
+}
+
+.vendor-contact span {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--gray-600);
+}
+
+.vendor-contact i {
+    color: var(--primary);
+    width: 14px;
+}
+
+.vendor-card-footer {
+    padding: var(--space-md) var(--space-lg);
+    border-top: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--gray-50);
+}
+
+.approved-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--font-size-xs);
+    color: var(--success);
+    font-weight: 600;
+}
+
+/* Loading State */
+.loading-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--space-3xl);
+}
+
+.loading-state p {
+    color: var(--gray-600);
+    margin-top: var(--space-md);
+}
+
+/* Responsive */
+@media screen and (min-width: 480px) {
+    .vendors-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .vendors-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media screen and (min-width: 1024px) {
+    .vendors-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .vendors-stats {
+        grid-template-columns: repeat(3, 1fr);
+        padding: var(--space-lg);
+        gap: var(--space-md);
+    }
+    
+    .vendors-stats .stat-number {
+        font-size: var(--font-size-xl);
+    }
+    
+    .vendors-stats .stat-item i {
+        font-size: 1.25rem;
+    }
+    
+    .vendor-card-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .vendor-contact {
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .vendors-stats {
+        grid-template-columns: 1fr;
+    }
+}
