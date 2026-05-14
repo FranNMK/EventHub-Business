@@ -1,7 +1,6 @@
 /* ============================================
    EventHub Business - Component Styles
    ============================================ */
-
 /* Navigation Bar */
 .navbar {
     background-color: var(--white);
@@ -16,13 +15,14 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
 }
 
 .nav-brand {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-lg);
     font-weight: 700;
     color: var(--primary);
 }
@@ -31,11 +31,12 @@
     font-size: 1.5rem;
 }
 
+/* Desktop Navigation */
 .nav-menu {
     display: flex;
     list-style: none;
     align-items: center;
-    gap: var(--space-md);
+    gap: 0.5rem;
 }
 
 .nav-link {
@@ -44,6 +45,8 @@
     font-weight: 500;
     border-radius: var(--radius-md);
     transition: all var(--transition-fast);
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
 }
 
 .nav-link:hover,
@@ -54,32 +57,40 @@
 
 .btn-login {
     border: 2px solid var(--primary);
-    color: var(--primary);
+    color: var(--primary) !important;
+    padding: 0.4rem 1rem;
 }
 
 .btn-login:hover {
     background-color: var(--primary);
-    color: var(--white);
+    color: var(--white) !important;
 }
 
 .btn-register {
     background-color: var(--primary);
-    color: var(--white);
+    color: var(--white) !important;
+    padding: 0.4rem 1rem;
 }
 
 .btn-register:hover {
     background-color: var(--primary-dark);
-    color: var(--white);
+    color: var(--white) !important;
 }
 
-/* Hamburger Menu */
+/* Hamburger Menu Button */
 .nav-toggle {
     display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 44px;
+    height: 44px;
     background: none;
     border: none;
     cursor: pointer;
-    padding: 0.5rem;
+    padding: 8px;
     z-index: 1001;
+    position: relative;
 }
 
 .hamburger {
@@ -88,30 +99,51 @@
     width: 24px;
     height: 2px;
     background-color: var(--dark);
-    transition: all var(--transition-fast);
+    transition: all 0.3s ease-in-out;
+    border-radius: 2px;
 }
 
 .hamburger::before,
 .hamburger::after {
     content: '';
     position: absolute;
+    left: 0;
     width: 24px;
     height: 2px;
     background-color: var(--dark);
-    transition: all var(--transition-fast);
+    transition: all 0.3s ease-in-out;
+    border-radius: 2px;
 }
 
 .hamburger::before {
-    top: -8px;
+    top: -7px;
+    transform-origin: center;
 }
 
 .hamburger::after {
-    bottom: -8px;
+    bottom: -7px;
+    transform-origin: center;
 }
+
+/* Hamburger Active State */
+.nav-toggle.active .hamburger {
+    background-color: transparent;
+}
+
+.nav-toggle.active .hamburger::before {
+    top: 0;
+    transform: rotate(45deg);
+}
+
+.nav-toggle.active .hamburger::after {
+    bottom: 0;
+    transform: rotate(-45deg);
+}
+
 
 /* Hero Section */
 .hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #66eaac 0%, #a24b8f 100%);
     color: var(--white);
     padding: var(--space-3xl) 0;
     position: relative;

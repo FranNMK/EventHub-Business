@@ -75,41 +75,63 @@
 
 /* Mobile Navigation (max-width: 767px) */
 @media screen and (max-width: 767px) {
+    /* Show hamburger menu */
     .nav-toggle {
-        display: block;
+        display: flex;
     }
     
+    /* Mobile menu styling */
     .nav-menu {
         position: fixed;
         top: 0;
         right: -100%;
-        width: 80%;
-        max-width: 300px;
+        width: 280px;
         height: 100vh;
         background-color: var(--white);
         flex-direction: column;
-        padding: 5rem var(--space-lg) var(--space-lg);
-        box-shadow: var(--shadow-xl);
-        transition: right var(--transition-base);
-        gap: var(--space-sm);
+        padding: 5rem 1.5rem 2rem;
+        box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+        transition: right 0.3s ease-in-out;
+        gap: 0.25rem;
+        overflow-y: auto;
     }
     
     .nav-menu.active {
         right: 0;
     }
     
-    .nav-toggle.active .hamburger {
-        background-color: transparent;
-    }
-    
-    .nav-toggle.active .hamburger::before {
+    /* Overlay when menu is open */
+    .nav-menu::before {
+        content: '';
+        position: fixed;
         top: 0;
-        transform: rotate(45deg);
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        pointer-events: none;
     }
     
-    .nav-toggle.active .hamburger::after {
-        bottom: 0;
-        transform: rotate(-45deg);
+    .nav-menu.active::before {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    
+    .nav-menu .nav-link {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: var(--font-size-base);
+        border-radius: var(--radius-md);
+    }
+    
+    .nav-menu .btn-login,
+    .nav-menu .btn-register {
+        text-align: center;
+        justify-content: center;
+        margin-top: 0.5rem;
     }
     
     .hero {
@@ -130,17 +152,17 @@
     }
 }
 
-/* Touch device optimizations */
-@media (hover: none) {
-    .btn:active {
-        transform: scale(0.98);
+/* Mobile landscape adjustments */
+@media screen and (max-width: 767px) and (orientation: landscape) {
+    .nav-menu {
+        padding: 4rem 1.5rem 2rem;
+        width: 320px;
     }
     
-    .card:active {
-        transform: scale(0.99);
+    .nav-menu .nav-link {
+        padding: 0.5rem 1rem;
     }
 }
-
 /* Print styles */
 @media print {
     .navbar,
