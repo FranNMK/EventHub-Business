@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="EventHub Business - Corporate Event Management Platform">
+    <title>EventHub Business - Event Management Platform</title>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-calendar-check"></i>
+                <span>EventHub Business</span>
+            </div>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span class="hamburger"></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html" class="nav-link active">Home</a></li>
+                <li><a href="pages/events.html" class="nav-link">Events</a></li>
+                <li><a href="pages/vendors.html" class="nav-link">Vendors</a></li>
+                <li id="navLogin"><a href="pages/login.html" class="nav-link btn-login">Login</a></li>
+                <li id="navRegister"><a href="pages/register.html" class="nav-link btn-register">Register</a></li>
+                <li id="navDashboard" style="display:none;"><a href="pages/dashboard.html" class="nav-link">Dashboard</a></li>
+                <li id="navLogout" style="display:none;"><a href="#" class="nav-link" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Streamline Your Corporate Events</h1>
+                <p class="hero-subtitle">Manage events, vendors, and registrations all in one powerful platform designed for modern businesses.</p>
+                <div class="hero-cta">
+                    <a href="pages/register.html" class="btn btn-primary btn-lg">Get Started Free</a>
+                    <a href="pages/events.html" class="btn btn-outline btn-lg">Browse Events</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="https://placehold.co/600x400/667eea/ffffff?text=Event+Management" alt="Event Management Dashboard">
+            </div>
+        </div>
+    </header>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2>Why Choose EventHub Business?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <h3>Event Management</h3>
+                    <p>Create, manage, and track corporate events with ease. Set capacity limits and monitor registrations in real-time.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h3>Vendor Integration</h3>
+                    <p>Connect with verified vendors offering services for your events. Streamline procurement and vendor management.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <h3>Smart Registration</h3>
+                    <p>Easy registration with QR code check-in. Track attendance and manage capacity automatically.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>Analytics & Reports</h3>
+                    <p>Get insights into event participation, vendor performance, and generate detailed reports with one click.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number" id="totalEvents">0</span>
+                    <span class="stat-label">Events Hosted</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="totalVendors">0</span>
+                    <span class="stat-label">Verified Vendors</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="totalRegistrations">0</span>
+                    <span class="stat-label">Registrations</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">99.9%</span>
+                    <span class="stat-label">Uptime</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3><i class="fas fa-calendar-check"></i> EventHub Business</h3>
+                    <p>Your complete event management solution for modern enterprises.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="pages/events.html">Events</a></li>
+                        <li><a href="pages/vendors.html">Vendors</a></li>
+                        <li><a href="pages/login.html">Login</a></li>
+                        <li><a href="pages/register.html">Register</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contact Us</h4>
+                    <p><i class="fas fa-envelope"></i> support@eventhub.com</p>
+                    <p><i class="fas fa-phone"></i> +1 (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 EventHub Business. ICT Skills Competition Project.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="js/utils/config.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/api.js"></script>
+    <script src="js/components/navigation.js"></script>
+    <script src="js/components/toast.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
