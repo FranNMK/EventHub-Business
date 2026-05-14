@@ -7,7 +7,7 @@ const { pool } = require('../config/database');
 class VendorController {
 
   /**
-   * Get all vendors (public - only approved)
+   * Get all vendors
    * GET /api/vendors
    */
   static async getAllVendors(req, res, next) {
@@ -22,49 +22,38 @@ class VendorController {
       `;
       const params = [];
 
-      // Filter by approval status
       if (approved === 'true') {
         query += ' AND v.is_approved = TRUE';
       } else if (approved === 'false') {
         query += ' AND v.is_approved = FALSE';
+      } else if (!req.user || req.user.role !== 'admin') {
+        query += ' AND v.is_approved = TRUE';
       }
 
-      // Filter by service type
       if (serviceType && serviceType !== 'all') {
         query += ' AND v.service_type = ?';
         params.push(serviceType);
       }
 
-      // Search by company name
       if (search) {
         query += ' AND (v.company_name LIKE ? OR v.description LIKE ?)';
         params.push(`%${search}%`, `%${search}%`);
       }
 
-      // If user is not admin, only show approved vendors
-      if (!req.user || req.user.role !== 'admin') {
-        query += ' AND v.is_approved = TRUE';
-      }
+      query += ' ORDER BY v.is_approved ASC, v.created_at DESC';
 
-      query += ' ORDER BY v.created_at DESC';
-
-      // Pagination
       const offset = (page - 1) * limit;
       query += ' LIMIT ? OFFSET ?';
       params.push(parseInt(limit), parseInt(offset));
 
       const [vendors] = await pool.query(query, params);
 
-      // Get total count
       let countQuery = 'SELECT COUNT(*) as total FROM vendors WHERE 1=1';
       const countParams = [];
-      if (approved === 'true') {
-        countQuery += ' AND is_approved = TRUE';
-      }
-      if (serviceType && serviceType !== 'all') {
-        countQuery += ' AND service_type = ?';
-        countParams.push(serviceType);
-      }
+      if (approved === 'true') countQuery += ' AND is_approved = TRUE';
+      else if (approved === 'false') countQuery += ' AND is_approved = FALSE';
+      else if (!req.user || req.user.role !== 'admin') countQuery += ' AND is_approved = TRUE';
+      
       const [countResult] = await pool.query(countQuery, countParams);
 
       res.json({
@@ -105,9 +94,8 @@ class VendorController {
         });
       }
 
-      // Get vendor services
       const [services] = await pool.query(
-        'SELECT * FROM services WHERE vendor_id = ? AND is_available = TRUE',
+        'SELECT * FROM services WHERE vendor_id = ?',
         [id]
       );
 
@@ -125,6 +113,49 @@ class VendorController {
   }
 
   /**
+   * Get own vendor profile
+   * GET /api/vendors/my-profile
+   */
+  static async getMyProfile(req, res, next) {
+    try {
+      const [vendors] = await pool.query(
+        `SELECT v.*, 
+         (SELECT COUNT(*) FROM services WHERE vendor_id = v.id) as total_services,
+         (SELECT COUNT(*) FROM services WHERE vendor_id = v.id AND is_available = TRUE) as active_services
+         FROM vendors v WHERE v.user_id = ?`,
+        [req.user.id]
+      );
+
+      if (vendors.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Vendor profile not found'
+        });
+      }
+
+      const [history] = await pool.query(
+        `SELECT h.*, u.name as changed_by_name
+         FROM vendor_status_history h
+         JOIN users u ON h.changed_by = u.id
+         WHERE h.vendor_id = ?
+         ORDER BY h.created_at DESC`,
+        [vendors[0].id]
+      );
+
+      res.json({
+        success: true,
+        data: {
+          ...vendors[0],
+          status_history: history
+        }
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Register as vendor
    * POST /api/vendors/register
    */
@@ -132,7 +163,6 @@ class VendorController {
     try {
       const { companyName, serviceType, description, contactEmail, contactPhone, website, address } = req.body;
 
-      // Check if user already has a vendor profile
       const [existing] = await pool.query(
         'SELECT id FROM vendors WHERE user_id = ?',
         [req.user.id]
@@ -146,8 +176,8 @@ class VendorController {
       }
 
       const [result] = await pool.query(
-        `INSERT INTO vendors (user_id, company_name, service_type, description, contact_email, contact_phone, website, address) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO vendors (user_id, company_name, service_type, description, contact_email, contact_phone, website, address, is_approved) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, FALSE)`,
         [req.user.id, companyName, serviceType, description || '', contactEmail, contactPhone, website, address]
       );
 
@@ -173,7 +203,6 @@ class VendorController {
       const { id } = req.params;
       const { companyName, serviceType, description, contactEmail, contactPhone, website, address } = req.body;
 
-      // Check ownership
       const [vendors] = await pool.query(
         'SELECT * FROM vendors WHERE id = ? AND user_id = ?',
         [id, req.user.id]
@@ -198,10 +227,7 @@ class VendorController {
       if (address !== undefined) { updates.push('address = ?'); values.push(address); }
 
       if (updates.length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'No fields to update'
-        });
+        return res.status(400).json({ success: false, message: 'No fields to update' });
       }
 
       values.push(id);
@@ -221,30 +247,66 @@ class VendorController {
   }
 
   /**
-   * Approve/Reject vendor (Admin only)
+   * Approve/Reject vendor with reason
    * PATCH /api/vendors/:id/approve
    */
   static async toggleApproval(req, res, next) {
     try {
       const { id } = req.params;
-      const { approved } = req.body;
+      const { approved, reason } = req.body;
 
-      const [result] = await pool.query(
-        'UPDATE vendors SET is_approved = ? WHERE id = ?',
-        [approved, id]
+      const [vendors] = await pool.query('SELECT * FROM vendors WHERE id = ?', [id]);
+      
+      if (vendors.length === 0) {
+        return res.status(404).json({ success: false, message: 'Vendor not found' });
+      }
+
+      const vendor = vendors[0];
+      const previousStatus = vendor.is_approved;
+
+      await pool.query(
+        'UPDATE vendors SET is_approved = ?, status_reason = ?, status_updated_at = NOW(), status_updated_by = ? WHERE id = ?',
+        [approved, reason || null, req.user.id, id]
       );
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Vendor not found'
-        });
+      await pool.query(
+        `INSERT INTO vendor_status_history (vendor_id, previous_status, new_status, reason, changed_by) 
+         VALUES (?, ?, ?, ?, ?)`,
+        [id, previousStatus, approved, reason || null, req.user.id]
+      );
+
+      if (!approved) {
+        await pool.query('UPDATE services SET is_available = FALSE WHERE vendor_id = ?', [id]);
       }
 
       res.json({
         success: true,
-        message: `Vendor ${approved ? 'approved' : 'rejected'} successfully`
+        message: `Vendor ${approved ? 'approved' : 'rejected'} successfully`,
+        data: { is_approved: approved, reason: reason || null }
       });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get vendor status history
+   * GET /api/vendors/:id/history
+   */
+  static async getVendorHistory(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      const [history] = await pool.query(`
+        SELECT h.*, u.name as changed_by_name
+        FROM vendor_status_history h
+        JOIN users u ON h.changed_by = u.id
+        WHERE h.vendor_id = ?
+        ORDER BY h.created_at DESC
+      `, [id]);
+
+      res.json({ success: true, data: history });
 
     } catch (error) {
       next(error);

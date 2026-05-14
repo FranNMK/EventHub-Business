@@ -141,18 +141,14 @@ function renderEvents(events) {
 function handleRegisterClick(eventId) {
     if (!ApiService.isAuthenticated()) {
         Toast.warning('Please login to register for events');
-        // Store the event ID to redirect back after login
         sessionStorage.setItem('redirectAfterLogin', `event-detail.html?id=${eventId}`);
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 1000);
+        setTimeout(() => window.location.href = 'login.html', 1000);
         return;
     }
     
-    // If authenticated, show detail modal with registration
-    showEventDetail(eventId);
+    // Show quick registration popup
+    showRegisterPopup(eventId);
 }
-
 /**
  * Show event detail modal
  */
@@ -298,9 +294,102 @@ function resetFilters() {
     loadEvents();
 }
 
+/**
+ * Show registration popup for quick register
+ */
+async function showRegisterPopup(eventId) {
+    if (!ApiService.isAuthenticated()) {
+        Toast.warning('Please login to register');
+        sessionStorage.setItem('redirectAfterLogin', `event-detail.html?id=${eventId}`);
+        setTimeout(() => window.location.href = 'login.html', 1000);
+        return;
+    }
+
+    try {
+        // Fetch event details
+        const response = await ApiService.get(`/events/${eventId}`);
+        if (response.success) {
+            const event = response.data;
+            
+            document.getElementById('popupEventTitle').textContent = event.title;
+            document.getElementById('popupDate').textContent = Helpers.formatDate(event.date);
+            document.getElementById('popupTime').textContent = event.time ? Helpers.formatTime(event.time) : 'TBD';
+            document.getElementById('popupLocation').textContent = event.location;
+            document.getElementById('popupSlots').textContent = event.available_slots;
+            document.getElementById('popupDescription').textContent = Helpers.truncateText(event.description || '', 200);
+            
+            const statusEl = document.getElementById('popupStatus');
+            const confirmBtn = document.getElementById('confirmRegisterBtn');
+            const errorEl = document.getElementById('popupError');
+            
+            errorEl.classList.add('d-none');
+            
+            // Check if already registered
+            const isRegistered = event.registrations?.some(r => 
+                r.user_id === ApiService.getCurrentUser().id && r.status === 'registered'
+            );
+            
+            if (event.status !== 'published') {
+                statusEl.innerHTML = `<span class="badge badge-warning">Event is ${event.status}</span>`;
+                confirmBtn.style.display = 'none';
+            } else if (isRegistered) {
+                statusEl.innerHTML = `<span class="badge badge-success"><i class="fas fa-check-circle"></i> Already Registered</span>`;
+                confirmBtn.style.display = 'none';
+            } else if (event.available_slots <= 0) {
+                statusEl.innerHTML = `<span class="badge badge-danger">Fully Booked</span>`;
+                confirmBtn.style.display = 'none';
+            } else {
+                statusEl.innerHTML = '';
+                confirmBtn.style.display = 'inline-flex';
+                confirmBtn.dataset.eventId = event.id;
+            }
+            
+            document.getElementById('registerPopupModal').classList.remove('d-none');
+        }
+    } catch (error) {
+        Toast.error('Failed to load event details');
+    }
+}
+
+/**
+ * Close register popup
+ */
+function closeRegisterPopup() {
+    document.getElementById('registerPopupModal').classList.add('d-none');
+}
+
+/**
+ * Confirm registration from popup
+ */
+async function confirmRegister() {
+    const eventId = document.getElementById('confirmRegisterBtn').dataset.eventId;
+    if (!eventId) return;
+    
+    try {
+        Helpers.showLoading();
+        const response = await ApiService.post('/registrations', { eventId: parseInt(eventId) });
+        if (response.success) {
+            Toast.success('Successfully registered! 🎉');
+            closeRegisterPopup();
+            loadEvents();
+        }
+    } catch (error) {
+        const errorEl = document.getElementById('popupError');
+        errorEl.textContent = error.message || 'Registration failed';
+        errorEl.classList.remove('d-none');
+    } finally {
+        Helpers.hideLoading();
+    }
+}
+
+
 // Global functions
 window.handleRegisterClick = handleRegisterClick;
 window.showEventDetail = showEventDetail;
 window.quickRegister = quickRegister;
+window.showRegisterPopup = showRegisterPopup;
+window.closeRegisterPopup = closeRegisterPopup;
+window.confirmRegister = confirmRegister;
 window.goToPage = goToPage;
 window.resetFilters = resetFilters;
+

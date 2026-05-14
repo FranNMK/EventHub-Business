@@ -78,7 +78,7 @@ async function seedVendors() {
             if (existing.length === 0) {
                 await pool.query(
                     `INSERT INTO vendors (user_id, company_name, service_type, description, contact_email, contact_phone, website, address, is_approved) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, FALSE)`,
                     [userId, vendor.company_name, vendor.service_type, vendor.description, 
                      vendor.contact_email, vendor.contact_phone, vendor.website, vendor.address]
                 );

@@ -34,13 +34,20 @@ if (process.env.NODE_ENV === 'development') {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Import routes
+// ============================================
+// IMPORT ALL ROUTES
+// ============================================
 const authRoutes = require('./routes/auth');
 const eventRoutes = require('./routes/events');
 const registrationRoutes = require('./routes/registrations');
 const vendorRoutes = require('./routes/vendors');
+const serviceRoutes = require('./routes/services');
 
-// API Routes
+// ============================================
+// API ROUTES - MUST be before 404 handler
+// ============================================
+
+// Health check
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
@@ -59,7 +66,15 @@ app.use('/api/events', eventRoutes);
 // Registration routes
 app.use('/api/registrations', registrationRoutes);
 
-// 404 handler for undefined routes
+// Vendor routes
+app.use('/api/vendors', vendorRoutes);
+
+// Service routes
+app.use('/api/services', serviceRoutes);
+
+// ============================================
+// 404 HANDLER - MUST be after all routes
+// ============================================
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -67,12 +82,14 @@ app.use((req, res) => {
   });
 });
 
-app.use('/api/vendors', vendorRoutes);
-
-// Global error handler
+// ============================================
+// GLOBAL ERROR HANDLER - MUST be last
+// ============================================
 app.use(errorHandler);
 
-// Initialize database and start server
+// ============================================
+// START SERVER
+// ============================================
 const startServer = async () => {
   try {
     const isConnected = await testConnection();
@@ -88,6 +105,17 @@ const startServer = async () => {
       console.log(`✅ ${process.env.APP_NAME || 'EventHub Business'} server running on port ${PORT}`);
       console.log(`📝 Environment: ${process.env.NODE_ENV}`);
       console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`📋 API Routes:`);
+      console.log(`   - POST /api/auth/register`);
+      console.log(`   - POST /api/auth/login`);
+      console.log(`   - GET  /api/events`);
+      console.log(`   - POST /api/events`);
+      console.log(`   - GET  /api/vendors`);
+      console.log(`   - POST /api/vendors/register`);
+      console.log(`   - GET  /api/services`);
+      console.log(`   - POST /api/services`);
+      console.log(`   - GET  /api/registrations`);
+      console.log(`   - POST /api/registrations`);
     });
 
   } catch (error) {

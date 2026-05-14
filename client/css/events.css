@@ -329,3 +329,52 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Registration Popup Styles */
+.popup-event-info {
+    padding: var(--space-md) 0;
+}
+
+.popup-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.popup-meta p {
+    margin-bottom: 0;
+    font-size: var(--font-size-sm);
+    color: var(--gray-700);
+}
+
+.popup-meta i {
+    color: var(--primary);
+    width: 16px;
+    margin-right: var(--space-xs);
+}
+
+.popup-description {
+    color: var(--gray-600);
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    margin-bottom: var(--space-lg);
+}
+
+.popup-status {
+    text-align: center;
+}
+
+.popup-status .badge {
+    font-size: var(--font-size-sm);
+    padding: 0.5rem 1rem;
+}
+
+@media screen and (max-width: 480px) {
+    .popup-meta {
+        grid-template-columns: 1fr;
+        gap: var(--space-sm);
+    }
+}

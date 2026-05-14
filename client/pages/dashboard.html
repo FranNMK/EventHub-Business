@@ -11,10 +11,10 @@
     <link rel="stylesheet" href="../css/responsive.css">
     <link rel="stylesheet" href="../css/components.css">
     <link rel="stylesheet" href="../css/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
-    <!-- Top Navigation Bar -->
     <nav class="navbar" id="navbar">
         <div class="container">
             <div class="nav-brand">
@@ -25,13 +25,11 @@
                 <span class="hamburger"></span>
             </button>
             <ul class="nav-menu" id="navMenu">
-                <li><a href="../index.html" class="nav-link">Home</a></li>
-                <li><a href="events.html" class="nav-link">Events</a></li>
-                <li><a href="vendors.html" class="nav-link">Vendors</a></li>
+                <li><a href="#" id="navLogoutLink" style="display:none;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </li>
             </ul>
         </div>
     </nav>
-
     <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
@@ -73,6 +71,12 @@
                 <li id="sidebarServicesMenu" style="display:none;">
                     <a href="#" data-tab="services">
                         <i class="fas fa-tools"></i> My Services
+                    </a>
+                </li>
+
+                <li id="sidebarCompanyMenu" style="display:none;">
+                    <a href="#" data-tab="company">
+                        <i class="fas fa-building"></i> Company Details
                     </a>
                 </li>
                 <li id="sidebarProfileMenu">
@@ -147,6 +151,89 @@
 
             <!-- Tab Content -->
             <div class="tab-content">
+                <!-- Company Details Tab (Vendor Only) -->
+                <div class="tab-pane" id="companyTab">
+                    <div class="profile-grid">
+                        <!-- Company Profile Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-building"></i> Company Details</h3>
+                                <span id="vendorApprovalBadge"></span>
+                            </div>
+                            <div class="card-body">
+                                <form id="companyProfileForm">
+                                    <div class="form-group">
+                                        <label for="companyNameField" class="form-label">Company Name *</label>
+                                        <input type="text" id="companyNameField" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="companyServiceType" class="form-label">Service Type *</label>
+                                        <select id="companyServiceType" class="form-control" required>
+                                            <option value="">Select type...</option>
+                                            <option value="catering">Catering</option>
+                                            <option value="photography">Photography</option>
+                                            <option value="decoration">Decoration</option>
+                                            <option value="entertainment">Entertainment</option>
+                                            <option value="technology">Technology / AV</option>
+                                            <option value="transportation">Transportation</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="companyDescription" class="form-label">Company Description</label>
+                                        <textarea id="companyDescription" class="form-control" rows="3"></textarea>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="companyEmail" class="form-label">Business Email</label>
+                                            <input type="email" id="companyEmail" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="companyPhone" class="form-label">Business Phone</label>
+                                            <input type="tel" id="companyPhone" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="companyWebsite" class="form-label">Website</label>
+                                        <input type="url" id="companyWebsite" class="form-control"
+                                            placeholder="https://">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="companyAddress" class="form-label">Business Address</label>
+                                        <input type="text" id="companyAddress" class="form-control">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Update Company Details
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Approval Status Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-clipboard-check"></i> Approval Status</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="vendorStatusInfo">
+                                    <div class="status-display">
+                                        <span class="status-icon" id="vendorStatusIcon"></span>
+                                        <h4 id="vendorStatusText">Loading...</h4>
+                                    </div>
+                                    <div class="status-reason" id="vendorStatusReason" style="display:none;">
+                                        <h5>Admin Message:</h5>
+                                        <p id="vendorReasonText"></p>
+                                        <small class="text-muted" id="vendorReasonDate"></small>
+                                    </div>
+                                    <div class="status-history" id="vendorStatusHistory">
+                                        <h5>Status History</h5>
+                                        <div id="vendorHistoryList"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Events Tab -->
                 <div class="tab-pane active" id="eventsTab">
                     <div class="card">
@@ -222,7 +309,14 @@
                     <div class="card">
                         <div class="card-header">
                             <h3>Vendor Management</h3>
-                            <span class="text-muted">Approve or reject vendor registrations</span>
+                            <div class="header-actions">
+                                <select id="vendorFilter" class="form-control form-control-sm"
+                                    onchange="filterVendors(this.value)">
+                                    <option value="all">All Vendors</option>
+                                    <option value="false">Pending Approval</option>
+                                    <option value="true">Approved</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="table-container">
@@ -234,12 +328,13 @@
                                             <th>Contact</th>
                                             <th>Status</th>
                                             <th>Registered</th>
+                                            <th>Website</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="vendorsTableBody">
                                         <tr>
-                                            <td colspan="6" class="text-center">Loading vendors...</td>
+                                            <td colspan="7" class="text-center">Loading vendors...</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -340,6 +435,58 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Registration Popup Modal -->
+            <div class="modal-overlay d-none" id="registerPopupModal">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3 id="popupEventTitle">Event Registration</h3>
+                        <button class="modal-close" onclick="closeRegisterPopup()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="popup-event-info">
+                            <div class="popup-meta">
+                                <p><i class="fas fa-calendar"></i> <span id="popupDate"></span></p>
+                                <p><i class="fas fa-clock"></i> <span id="popupTime"></span></p>
+                                <p><i class="fas fa-map-marker-alt"></i> <span id="popupLocation"></span></p>
+                                <p><i class="fas fa-users"></i> <span id="popupSlots"></span> slots available</p>
+                            </div>
+                            <div class="popup-description" id="popupDescription"></div>
+                            <div class="popup-status" id="popupStatus"></div>
+                        </div>
+                        <div class="alert alert-danger d-none" id="popupError"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" onclick="closeRegisterPopup()">Cancel</button>
+                        <button class="btn btn-primary" id="confirmRegisterBtn" onclick="confirmRegister()">
+                            <i class="fas fa-ticket-alt"></i> Confirm Registration
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Vendor Action Modal (Approve/Reject with Reason) -->
+            <div class="modal-overlay d-none" id="vendorActionModal">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3 id="vendorActionTitle">Vendor Action</h3>
+                        <button class="modal-close" onclick="closeVendorActionModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="vendorActionMessage"></p>
+                        <div class="form-group">
+                            <label for="vendorActionReason" class="form-label">Reason (optional)</label>
+                            <textarea id="vendorActionReason" class="form-control" rows="3"
+                                placeholder="Provide a reason for this action..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" onclick="closeVendorActionModal()">Cancel</button>
+                        <button class="btn btn-primary" id="vendorActionConfirmBtn" onclick="confirmVendorAction()">
+                            Confirm
+                        </button>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -394,6 +541,54 @@
             <div class="modal-footer">
                 <button class="btn btn-outline" id="cancelEventBtn">Cancel</button>
                 <button class="btn btn-primary" id="saveEventBtn">Create Event</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Creation/Edit Modal -->
+    <div class="modal-overlay d-none" id="serviceModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="serviceModalTitle">Add New Service</h3>
+                <button class="modal-close" onclick="closeServiceModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="serviceForm">
+                    <div class="form-group">
+                        <label for="serviceName" class="form-label">Service Name *</label>
+                        <input type="text" id="serviceName" class="form-control"
+                            placeholder="e.g., Corporate Catering Package" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="serviceDescription" class="form-label">Description</label>
+                        <textarea id="serviceDescription" class="form-control" rows="3"
+                            placeholder="Describe your service in detail..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="servicePrice" class="form-label">Price ($) *</label>
+                            <input type="number" id="servicePrice" class="form-control" min="0" step="0.01"
+                                placeholder="0.00" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="serviceDuration" class="form-label">Duration</label>
+                            <input type="text" id="serviceDuration" class="form-control" placeholder="e.g., 2 hours">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="serviceAvailable" checked>
+                            <span>Available for booking</span>
+                        </label>
+                    </div>
+                    <input type="hidden" id="serviceId">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeServiceModal()">Cancel</button>
+                <button class="btn btn-primary" id="saveServiceBtn" onclick="saveService()">
+                    <i class="fas fa-save"></i> Save Service
+                </button>
             </div>
         </div>
     </div>

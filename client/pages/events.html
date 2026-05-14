@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <link rel="stylesheet" href="../css/components.css">
     <link rel="stylesheet" href="../css/events.css">
 </head>
+
 <body>
     <nav class="navbar" id="navbar">
         <div class="container">
@@ -76,6 +78,35 @@
                 <!-- Pagination buttons will be rendered here -->
             </div>
         </div>
+
+        <!-- Registration Popup Modal (for quick register) -->
+        <div class="modal-overlay d-none" id="registerPopupModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 id="popupEventTitle">Event Registration</h3>
+                    <button class="modal-close" onclick="closeRegisterPopup()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="popup-event-info">
+                        <div class="popup-meta">
+                            <p><i class="fas fa-calendar"></i> <span id="popupDate"></span></p>
+                            <p><i class="fas fa-clock"></i> <span id="popupTime"></span></p>
+                            <p><i class="fas fa-map-marker-alt"></i> <span id="popupLocation"></span></p>
+                            <p><i class="fas fa-users"></i> <span id="popupSlots"></span> slots available</p>
+                        </div>
+                        <div class="popup-description" id="popupDescription"></div>
+                        <div class="popup-status" id="popupStatus"></div>
+                    </div>
+                    <div class="alert alert-danger d-none" id="popupError"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeRegisterPopup()">Cancel</button>
+                    <button class="btn btn-primary" id="confirmRegisterBtn" onclick="confirmRegister()">
+                        <i class="fas fa-ticket-alt"></i> Confirm Registration
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Event Detail Modal -->
@@ -132,4 +163,5 @@
     <script src="../js/components/toast.js"></script>
     <script src="../js/pages/events.js"></script>
 </body>
+
 </html>
