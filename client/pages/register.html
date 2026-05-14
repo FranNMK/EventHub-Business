@@ -1,0 +1,135 @@
+< !DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Register - EventHub Business</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet">
+        <link rel="stylesheet" href="../css/main.css">
+        <link rel="stylesheet" href="../css/responsive.css">
+        <link rel="stylesheet" href="../css/components.css">
+        <link rel="stylesheet" href="../css/auth.css">
+    </head>
+
+    <body>
+        <nav class="navbar" id="navbar">
+            <div class="container">
+                <div class="nav-brand">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>EventHub Business</span>
+                </div>
+                <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                    <span class="hamburger"></span>
+                </button>
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="../index.html" class="nav-link">Home</a></li>
+                    <li><a href="events.html" class="nav-link">Events</a></li>
+                    <li><a href="vendors.html" class="nav-link">Vendors</a></li>
+                    <li><a href="login.html" class="nav-link">Login</a></li>
+                    <li><a href="register.html" class="nav-link active btn-register">Register</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <i class="fas fa-user-plus auth-logo"></i>
+                    <h1>Create Account</h1>
+                    <p>Join EventHub Business today</p>
+                </div>
+
+                <form id="registerForm" class="auth-form" novalidate>
+                    <div class="form-group">
+                        <label for="name" class="form-label">Full Name</label>
+                        <div class="input-group">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" id="name" name="name" class="form-control" placeholder="John Doe"
+                                required>
+                        </div>
+                        <span class="error-message" id="nameError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" id="email" name="email" class="form-control"
+                                placeholder="you@company.com" required>
+                        </div>
+                        <span class="error-message" id="emailError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role" class="form-label">I am a</label>
+                        <select id="role" name="role" class="form-control" required>
+                            <option value="employee">Employee (Attend Events)</option>
+                            <option value="vendor">Vendor (Offer Services)</option>
+                            <option value="admin">Administrator (Manage Events)</option>
+                        </select>
+                        <span class="error-message" id="roleError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="password" name="password" class="form-control"
+                                placeholder="Create a strong password" required>
+                            <button type="button" class="password-toggle" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength" id="passwordStrength">
+                            <div class="strength-bar"></div>
+                            <span class="strength-text"></span>
+                        </div>
+                        <span class="error-message" id="passwordError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword" class="form-label">Confirm Password</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="confirmPassword" name="confirmPassword" class="form-control"
+                                placeholder="Confirm your password" required>
+                        </div>
+                        <span class="error-message" id="confirmPasswordError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="termsAgree" required>
+                            <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy
+                                    Policy</a></span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="registerBtn">
+                        <span class="btn-text">Create Account</span>
+                        <span class="spinner d-none" id="registerSpinner"></span>
+                    </button>
+
+                    <div class="alert alert-danger d-none" id="registerError"></div>
+                </form>
+
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="login.html">Sign in</a></p>
+                </div>
+            </div>
+        </main>
+
+        <div class="toast-container" id="toastContainer"></div>
+
+        <script src="../js/utils/config.js"></script>
+        <script src="../js/utils/helpers.js"></script>
+        <script src="../js/utils/api.js"></script>
+        <script src="../js/components/navigation.js"></script>
+        <script src="../js/components/toast.js"></script>
+        <script src="../js/pages/register.js"></script>
+    </body>
+
+    </html>

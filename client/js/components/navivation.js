@@ -36,7 +36,8 @@ class Navigation {
         // Close menu when clicking a link
         const navLinks = navMenu.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
-            link.addEventListener('click', () => {
+            link.addEventListener('click', (e) => {
+                e.stopPropagation();
                 // Small delay to allow link navigation
                 setTimeout(() => {
                     this.closeMenu(navToggle, navMenu);

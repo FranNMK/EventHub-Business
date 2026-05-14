@@ -5,18 +5,18 @@
 const CONFIG = {
     // API Configuration
     API_URL: 'http://localhost:5000/api',
-    
+
     // Application Settings
     APP_NAME: 'EventHub Business',
     APP_VERSION: '1.0.0',
-    
+
     // Storage Keys
     STORAGE_KEYS: {
         TOKEN: 'ehb_token',
         REFRESH_TOKEN: 'ehb_refresh_token',
         USER: 'ehb_user'
     },
-    
+
     // Routes
     ROUTES: {
         HOME: '/',
@@ -26,10 +26,10 @@ const CONFIG = {
         EVENTS: '/pages/events.html',
         VENDORS: '/pages/vendors.html'
     },
-    
+
     // Toast Duration (ms)
     TOAST_DURATION: 3000,
-    
+
     // Pagination
     DEFAULT_PAGE_SIZE: 10
 };
