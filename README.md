@@ -1,220 +1,186 @@
-# EventHub Business Platform
+# EventHub Business
 
-EventHub Business is a full-stack event management platform developed for the ICT Solutions Skills Competition 2026. It provides organizations with tools to manage corporate events, vendors, attendee registrations and reporting.
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)](.) [![Node.js](https://img.shields.io/badge/Node.js-v16+-green)](https://nodejs.org) [![License](https://img.shields.io/badge/license-ISC-yellow)](LICENSE)
+
+A polished, full-stack event management platform built as the reference implementation for the ICT Solutions Skills Competition 2026. EventHub Business helps organizations create events, onboard vendors, manage registrations (with QR tickets), and view analytics — with clear role-based access for Admins, Vendors and Employees.
 
 ---
 
-## Table of Contents
-
+**Table of contents**
 - [Project Overview](#project-overview)
-- [Key Features](#key-features)
+- [Highlights](#highlights)
 - [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Database Schema](#database-schema)
+- [Repository Structure](#repository-structure)
 - [Quick Start](#quick-start)
-- [API Endpoints](#api-endpoints)
+- [Environment Variables](#environment-variables)
+- [API Endpoints & Testing](#api-endpoints--testing)
+- [Front-end Notes](#front-end-notes)
+- [Database & Seed Data](#database--seed-data)
 - [Security](#security)
-- [Responsive Design](#responsive-design)
-- [Testing](#testing)
-- [License](#license)
+- [Contributing](#contributing)
 - [Author](#author)
+- [License](#license)
 
 ---
 
 ## Project Overview
 
-EventHub Business is a web-based platform that enables organizations to:
+EventHub Business is a web application to manage corporate events end-to-end:
+- Create, publish, and schedule events with capacity control
+- Register vendors and manage vendor services
+- Employee registration with QR ticket generation for check-in
+- Role-based dashboards and reports for Admins, Vendors, and Employees
+- Lightweight server (Express.js) with a modular MVC structure and a responsive front-end (vanilla JS)
 
-- Manage corporate events and vendor interactions
-- Handle employee registrations and attendance tracking
-- Generate QR codes for event check-ins
-- Provide reporting and CSV exports for analytics
-
-## Key Features
-
-- User authentication with JWT and refresh tokens
-- Role-based access control (Admin, Vendor, User)
-- Event creation and management
-- Vendor registration and approval workflow
-- Attendee registrations and QR check-in
-- CSV export for event reports
+## Highlights
+- QR code ticketing generated server-side and stored with registrations
+- Token-based auth (JWT) with refresh token support
+- Re-usable API service and centralized config on the client
+- Mobile-first responsive UI with an accessible dashboard
 
 ## Tech Stack
+- Backend: Node.js, Express.js
+- Database: TiDB Cloud (MySQL-compatible) via `mysql2/promise` pool
+- Auth: `jsonwebtoken`, `bcryptjs`
+- Utilities: `helmet`, `cors`, `morgan`
+- QR generation: `qrcode` (server-side data URLs)
+- Frontend: Vanilla ES6 JavaScript, CSS Grid/Flexbox, Font Awesome
 
-### Backend
+## Repository Structure
 
-- Runtime: Node.js with Express
-- Database: TiDB Cloud (MySQL-compatible) or MySQL
-- Authentication: JWT with refresh tokens
-- Security: bcrypt, helmet, CORS, rate limiting
-- QR Codes: QR generation library
-- Reports: CSV export
+Top-level layout (abridged):
 
-### Frontend (Module 2)
+- `client/` — Frontend site (HTML/CSS/JS)
+  - `pages/` — Single-page HTML views (dashboard, register, login, etc.)
+  - `js/` — Client scripts (utils, components, pages)
+  - `css/` — Styles (main, components, responsive, dashboard)
+- `server/` — Backend API
+  - `controllers/` — Route handlers (auth, events, registrations...)
+  - `routes/` — Express routes mounted under `/api`
+  - `middleware/` — Auth, validation, error handling
+  - `config/database.js` — DB pool + schema initialization
+- `database/schema.sql` — canonical schema
 
-- Framework: Vanilla JavaScript (ES6 modules)
-- Styling: CSS Grid & Flexbox (mobile-first)
-- Charts: Chart.js
-- HTTP client: Fetch API with interceptors
-
-## Project Structure
-
-```
-EventHub-Business/
-├── client/         # Frontend application
-│   ├── assets/     # Images, icons, fonts
-│   ├── css/        # Stylesheets
-│   ├── js/         # JavaScript modules
-│   └── pages/      # HTML pages
-├── server/         # Backend API
-│   ├── config/     # Database configuration
-│   ├── controllers/# Route controllers
-│   ├── middleware/ # Auth & error handling
-│   ├── models/     # Database models
-│   ├── routes/     # API routes
-│   ├── utils/      # Helper functions
-│   └── server.js   # Entry point
-└── database/       # SQL scripts & schema
-	└── schema.sql
-```
-
-## Database Schema
-
-### Entity Relationships
-
-- `Users` (1) → (1) `Vendors` (for vendor users)
-- `Users` (1) → (M) `Events` (created events)
-- `Users` (1) → (M) `Registrations` (event registrations)
-- `Events` (1) → (M) `Registrations` (event attendees)
-- `Vendors` (1) → (M) `Services` (offered services)
+See the full tree in the repository for details.
 
 ## Quick Start
 
-### Prerequisites
+Prerequisites:
+- Node.js v16+ and `npm` (or `yarn`)
+- TiDB Cloud or MySQL-compatible database
+- Git
 
-- Node.js v16+
-- TiDB Cloud account (or MySQL 5.7+)
-- npm or yarn
-
-### Installation
-
-1. Clone the repository
+1. Clone the repo
 
 ```bash
 git clone https://github.com/FranNMK/EventHub-Business.git
 cd EventHub-Business
 ```
 
-2. Setup backend
+2. Backend setup
 
 ```bash
 cd server
 npm install
+# create a `.env` file (see Environment Variables below)
+npm run dev
+# server will run on http://localhost:5000 (default)
 ```
 
-3. Environment
-
-Copy the example environment and configure your credentials:
+3. Frontend (development)
 
 ```bash
-cp .env.example .env
-# Edit server/.env with your TiDB/MySQL credentials and JWT secret
+# in a new terminal
+cd client
+npx live-server --port=5500
+# open http://127.0.0.1:5500
 ```
 
-Example `server/.env` entries:
+## Environment Variables
+Create `server/.env` with values similar to the example below:
 
 ```
+PORT=5000
+NODE_ENV=development
+
 DB_HOST=your_tidb_host
 DB_PORT=4000
-DB_USER=your_username
-DB_PASSWORD=your_password
+DB_USER=your_tidb_user
+DB_PASSWORD=your_tidb_password
 DB_NAME=eventhub_business
-JWT_SECRET=your_secret_key
+DB_SSL=true
+
+JWT_SECRET=your_secret_key_here
+JWT_EXPIRE=24h
+JWT_REFRESH_EXPIRE=7d
+
+APP_NAME=EventHub Business Platform
+APP_URL=http://localhost:5000
+CLIENT_URL=http://localhost:5500
 ```
 
-4. Run the server (development)
+## API Endpoints & Testing
+- Health: `GET /api/health`
+- Auth: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/refresh`
+- Events: `GET/POST/PUT/DELETE /api/events`
+- Registrations: `POST /api/registrations` (creates QR code), `DELETE /api/registrations/:id`
 
-```bash
-npm run dev
-# The server will create tables on first run if configured to do so
-```
-
-5. Verify the API
+You can use Curl or Postman/Thunder Client. Example health check:
 
 ```bash
 curl http://localhost:5000/api/health
 ```
 
-## API Endpoints
+Example register (cURL):
 
-Authentication (Module 2)
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@example.com","password":"Test@123","role":"employee"}'
+```
 
-- `POST /api/auth/register` — Register a new user
-- `POST /api/auth/login` — User login
-- `POST /api/auth/refresh` — Refresh access token
-- `GET /api/auth/profile` — Get user profile
-- `PUT /api/auth/profile` — Update profile
+### Default Test Accounts (for local testing)
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | frankmk2025@gmail.com | Admin@123 |
+| Employee | employee@test.com | Emp@123 |
+| Vendor | vendor@test.com | Vendor@123 |
 
-Events (Module 3)
+> NOTE: Use these accounts only in local development; rotate credentials for any shared deployments.
 
-- `GET /api/events` — List events
-- `POST /api/events` — Create event (Admin)
-- `GET /api/events/:id` — Event details
-- `PUT /api/events/:id` — Update event
-- `DELETE /api/events/:id` — Delete event
+## Front-end Notes
+- Client config lives in `client/js/utils/config.js` — update `API_URL` if backend runs on a different host/port.
+- The front-end uses an API service with a 15s request timeout and automatic token refresh logic.
+- The dashboard stores `currentRegistrations` (with `qr_code` data URLs) and exposes a small modal to view/download QR images.
 
-Vendors (Module 4)
-
-- `POST /api/vendors/register` — Vendor registration
-- `GET /api/vendors` — List vendors
-- `PUT /api/vendors/:id` — Update vendor
-- `PATCH /api/vendors/:id/approve` — Approve vendor (Admin)
-
-Services (Module 4)
-
-- `POST /api/services` — Add service (Vendor)
-- `GET /api/services` — List services
-- `PUT /api/services/:id` — Update service
-
-Registrations (Module 5)
-
-- `POST /api/registrations` — Register for event
-- `GET /api/registrations` — User registrations
-- `DELETE /api/registrations/:id` — Cancel registration
-
-Reports (Module 6)
-
-- `GET /api/reports/dashboard` — Admin dashboard stats
-- `GET /api/reports/events/:id/export` — Export registrations CSV
+## Database & Seed Data
+- `server/config/database.js` creates required tables on first run (users, vendors, events, services, registrations, refresh_tokens, vendor_status_history).
+- Use the provided seed scripts in `server/utils/` to create sample data for local testing.
 
 ## Security
+- Passwords hashed using `bcryptjs` (12 salt rounds)
+- JWT short-lived access + refresh token pattern
+- Parameterized queries to avoid SQL injection
+- Helmet + CORS configured for safe defaults
 
-- Password hashing with `bcrypt` (12 rounds)
-- JWT authentication with refresh tokens
-- Role-based access control (RBAC)
-- Input validation and sanitization
-- CORS protection
-- Rate limiting on authentication routes
-- Parameterized queries to mitigate SQL injection
-
-## Responsive Design
-
-- Mobile-first approach using CSS Grid & Flexbox
-- Breakpoints: 480px, 768px, 1024px, 1200px
-- Touch-friendly UI controls
-
-## Testing
-
-- Postman collection included for API tests (see `client` or `server` docs)
-- Test commands and CI configuration will be added in Module 7
-
-## License
-
-ISC — Created for ICT Skills Competition 2026
+## Contributing
+- Fork the repo, create a feature branch, open a PR with tests and description.
+- Keep UI changes accessible and responsive.
+- For backend changes include new migrations or updates to `schema.sql`.
 
 ## Author
+Francis NMK — contributor and organizer
 
-Francis NMK
+GitHub: https://github.com/FranNMK
 
+## License
+ISC
 
+---
 
+If you'd like, I can also:
+- Add a short screenshots / assets gallery section
+- Add step-by-step screenshots for installation
+- Generate a small `CONTRIBUTING.md` and `ISSUE_TEMPLATE.md`
+
+Tell me which additions you want and I'll apply them.

@@ -42,6 +42,7 @@ const eventRoutes = require('./routes/events');
 const registrationRoutes = require('./routes/registrations');
 const vendorRoutes = require('./routes/vendors');
 const serviceRoutes = require('./routes/services');
+const reportRoutes = require('./routes/reports');
 
 // ============================================
 // API ROUTES - MUST be before 404 handler
@@ -82,6 +83,8 @@ app.use((req, res) => {
   });
 });
 
+
+app.use('/api/reports', reportRoutes);
 // ============================================
 // GLOBAL ERROR HANDLER - MUST be last
 // ============================================

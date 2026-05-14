@@ -22,9 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDashboardData();
 });
 
-/**
- * Initialize dashboard based on role
- */
 function initDashboard() {
     document.getElementById('userName').textContent = currentUser.name || 'User';
     document.getElementById('sidebarUserName').textContent = currentUser.name || 'User';
@@ -39,11 +36,11 @@ function initDashboard() {
 
     // Configure based on role
     if (currentUser.role === 'admin') {
-        // Admin: Show all menus
         document.getElementById('sidebarEventsMenu').style.display = 'block';
         document.getElementById('sidebarRegistrationsMenu').style.display = 'block';
         document.getElementById('sidebarVendorsMenu').style.display = 'block';
         document.getElementById('sidebarServicesMenu').style.display = 'none';
+        document.getElementById('sidebarCompanyMenu').style.display = 'none';
         document.getElementById('sidebarProfileMenu').style.display = 'block';
         document.getElementById('dashboardSubtitle').textContent = 'Manage events, vendors, and registrations';
 
@@ -54,13 +51,13 @@ function initDashboard() {
         `;
 
     } else if (currentUser.role === 'vendor') {
-        // Vendor: Show services and registrations
         document.getElementById('sidebarEventsMenu').style.display = 'block';
         document.getElementById('sidebarRegistrationsMenu').style.display = 'block';
         document.getElementById('sidebarVendorsMenu').style.display = 'none';
         document.getElementById('sidebarServicesMenu').style.display = 'block';
+        document.getElementById('sidebarCompanyMenu').style.display = 'block';
         document.getElementById('sidebarProfileMenu').style.display = 'block';
-        document.getElementById('dashboardSubtitle').textContent = 'Manage your services and view bookings';
+        document.getElementById('dashboardSubtitle').textContent = 'Manage your services and company profile';
 
         headerActions.innerHTML = `
             <button class="btn btn-primary" onclick="openServiceModal()">
@@ -68,12 +65,16 @@ function initDashboard() {
             </button>
         `;
 
-    } else if (currentUser.role === 'employee') {
-        // Employee: Only events and registrations
+        // Load vendor profile on init
+        loadVendorProfile();
+
+    } else {
+        // Employee
         document.getElementById('sidebarEventsMenu').style.display = 'block';
         document.getElementById('sidebarRegistrationsMenu').style.display = 'block';
         document.getElementById('sidebarVendorsMenu').style.display = 'none';
         document.getElementById('sidebarServicesMenu').style.display = 'none';
+        document.getElementById('sidebarCompanyMenu').style.display = 'none';
         document.getElementById('sidebarProfileMenu').style.display = 'block';
         document.getElementById('dashboardSubtitle').textContent = 'Browse events and manage your registrations';
 
@@ -82,32 +83,17 @@ function initDashboard() {
                 <i class="fas fa-search"></i> Browse Events
             </button>
         `;
-    } else (currentUser.role === 'vendor') {
-        document.getElementById('sidebarEventsMenu').style.display = 'block';
-        document.getElementById('sidebarRegistrationsMenu').style.display = 'block';
-        document.getElementById('sidebarVendorsMenu').style.display = 'none';
-        document.getElementById('sidebarServicesMenu').style.display = 'block';
-        document.getElementById('sidebarCompanyMenu').style.display = 'block';  // ADD THIS
-        document.getElementById('sidebarProfileMenu').style.display = 'block';
-        document.getElementById('dashboardSubtitle').textContent = 'Manage your services and company profile';
-
-        headerActions.innerHTML = `
-        <button class="btn btn-primary" onclick="openServiceModal()">
-            <i class="fas fa-plus"></i> Add Service
-        </button>
-    `;
-
-        // Load vendor profile on init
-        loadVendorProfile();
-
-        // Add company form listener
-        document.getElementById('companyProfileForm')?.addEventListener('submit', updateCompanyProfile);
     }
 
     // Load profile data
     document.getElementById('profileName').value = currentUser.name || '';
     document.getElementById('profileEmail').value = currentUser.email || '';
     document.getElementById('profileRole').value = currentUser.role || '';
+
+    // Add company form listener for vendor
+    if (currentUser.role === 'vendor') {
+        document.getElementById('companyProfileForm')?.addEventListener('submit', updateCompanyProfile);
+    }
 }
 
 /**
@@ -333,7 +319,10 @@ function renderEvents(events) {
                     <button class="action-btn edit" title="Edit" onclick="editEvent(${event.id})">
                         <i class="fas fa-edit"></i></button>
                     <button class="action-btn delete" title="Delete" onclick="deleteEvent(${event.id})">
-                        <i class="fas fa-trash"></i></button>` : ''}
+                        <i class="fas fa-trash"></i></button>
+                    <button class="action-btn view" title="Export CSV" onclick="exportRegistrations(${event.id})" style="background-color: rgba(72,187,120,0.1); color: var(--success);">
+                        <i class="fas fa-download"></i></button>
+                    ` : ''}
                 </div>
             </td>
         </tr>
@@ -365,6 +354,10 @@ function renderRegistrations(registrations) {
             <td>${Helpers.formatDate(reg.registration_date)}</td>
             <td>
                 <div class="action-buttons">
+                    ${reg.qr_code ? `
+                    <button class="action-btn view" title="View QR Code" onclick="showQRCode(${reg.id})">
+                        <i class="fas fa-qrcode"></i>
+                    </button>` : ''}
                     ${reg.status === 'registered' ? `
                     <button class="action-btn delete" title="Cancel" onclick="cancelRegistration(${reg.id})">
                         <i class="fas fa-times"></i></button>` : ''}
@@ -679,6 +672,39 @@ async function deleteEvent(eventId) {
         Toast.error(error.message);
     } finally {
         Helpers.hideLoading();
+    }
+}
+
+/**
+ * Export event registrations as CSV
+ */
+async function exportRegistrations(eventId) {
+    try {
+        Toast.info('Generating CSV report...');
+        const response = await fetch(`${CONFIG.API_URL}/reports/events/${eventId}/export`, {
+            headers: {
+                'Authorization': `Bearer ${ApiService.getToken()}`
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || 'Export failed');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `event-${eventId}-registrations.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+
+        Toast.success('CSV exported successfully!');
+    } catch (error) {
+        Toast.error(error.message || 'Failed to export');
     }
 }
 
@@ -1292,6 +1318,7 @@ window.openEventModal = openEventModal;
 window.editEvent = editEvent;
 window.deleteEvent = deleteEvent;
 window.viewEvent = viewEvent;
+window.exportRegistrations = exportRegistrations;
 window.cancelRegistration = cancelRegistration;
 window.toggleVendorApproval = toggleVendorApproval;
 window.openServiceModal = openServiceModal;
@@ -1305,10 +1332,47 @@ window.rejectVendor = rejectVendor;
 window.revokeVendor = revokeVendor;
 window.viewVendorDetail = viewVendorDetail;
 window.filterVendors = filterVendors;
-window.approveVendor = approveVendor;
-window.rejectVendor = rejectVendor;
-window.revokeVendor = revokeVendor;
 window.closeVendorActionModal = closeVendorActionModal;
 window.confirmVendorAction = confirmVendorAction;
-window.toggleVendorApproval = toggleVendorApproval;
-window.handleLogout = handleLogout;
+
+// ===== QR CODE =====
+
+/**
+ * Show QR code for a registration
+ */
+function showQRCode(registrationId) {
+    const registration = currentRegistrations.find(r => r.id === registrationId);
+    
+    if (!registration || !registration.qr_code) {
+        Toast.error('QR code not available');
+        return;
+    }
+    
+    document.getElementById('qrCodeImage').src = registration.qr_code;
+    document.getElementById('qrEventName').textContent = registration.event_title || 'Event';
+    document.getElementById('qrCodeModal').classList.remove('d-none');
+}
+
+/**
+ * Close QR code modal
+ */
+function closeQRModal() {
+    document.getElementById('qrCodeModal').classList.add('d-none');
+}
+
+/**
+ * Download QR code as image
+ */
+function downloadQRCode() {
+    const img = document.getElementById('qrCodeImage');
+    const link = document.createElement('a');
+    link.download = 'event-qr-code.png';
+    link.href = img.src;
+    link.click();
+    Toast.success('QR Code downloaded!');
+}
+
+// Export functions to global scope
+window.showQRCode = showQRCode;
+window.closeQRModal = closeQRModal;
+window.downloadQRCode = downloadQRCode;

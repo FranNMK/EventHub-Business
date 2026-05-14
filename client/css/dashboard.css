@@ -499,6 +499,24 @@
     margin-right: var(--space-xs);
 }
 
+/* QR Code Modal */
+#qrCodeModal .modal-body {
+    padding: var(--space-xl);
+}
+
+#qrCodeContainer {
+    background: white;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    display: inline-block;
+    border: 2px dashed var(--gray-300);
+}
+
+#qrCodeImage {
+    display: block;
+    margin: 0 auto;
+}
+
 .popup-description {
     color: var(--gray-600);
     font-size: var(--font-size-sm);

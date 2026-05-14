@@ -1,7 +1,6 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-// Database connection pool (TiDB Cloud compatible)
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT || 4000,
@@ -9,16 +8,18 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   ssl: process.env.DB_SSL === 'true' ? {
-    rejectUnauthorized: true
+    rejectUnauthorized: false,
+    minVersion: 'TLSv1.2'
   } : false,
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 5,
   queueLimit: 0,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 0
+  keepAliveInitialDelay: 10000,
+  connectTimeout: 30000,
+  idleTimeout: 60000
 });
 
-// Test database connection
 const testConnection = async () => {
   try {
     const connection = await pool.getConnection();
@@ -31,12 +32,10 @@ const testConnection = async () => {
   }
 };
 
-// Initialize database tables
 const initializeDatabase = async () => {
   const connection = await pool.getConnection();
   
   try {
-    // Create Users table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -54,7 +53,6 @@ const initializeDatabase = async () => {
       )
     `);
 
-    // Create Events table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS events (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -77,7 +75,6 @@ const initializeDatabase = async () => {
       )
     `);
 
-    // Create Vendors table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS vendors (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -90,6 +87,9 @@ const initializeDatabase = async () => {
         website VARCHAR(255),
         address VARCHAR(255),
         is_approved BOOLEAN DEFAULT FALSE,
+        status_reason TEXT,
+        status_updated_at TIMESTAMP NULL,
+        status_updated_by INT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -99,7 +99,6 @@ const initializeDatabase = async () => {
       )
     `);
 
-    // Create Services table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS services (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -118,7 +117,6 @@ const initializeDatabase = async () => {
       )
     `);
 
-    // Create Registrations table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS registrations (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -140,7 +138,6 @@ const initializeDatabase = async () => {
       )
     `);
 
-    // Create Refresh Tokens table (for JWT refresh)
     await connection.query(`
       CREATE TABLE IF NOT EXISTS refresh_tokens (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -151,6 +148,20 @@ const initializeDatabase = async () => {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         INDEX idx_token (token),
         INDEX idx_user (user_id)
+      )
+    `);
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS vendor_status_history (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        vendor_id INT NOT NULL,
+        previous_status BOOLEAN,
+        new_status BOOLEAN NOT NULL,
+        reason TEXT,
+        changed_by INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (vendor_id) REFERENCES vendors(id) ON DELETE CASCADE,
+        FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
 

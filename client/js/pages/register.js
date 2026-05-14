@@ -286,7 +286,7 @@ function redirectByRole(role) {
             window.location.href = 'dashboard.html';
             break;
         case 'vendor':
-            window.location.href = 'vendor-dashboard.html';
+            window.location.href = 'dashboard.html';
             break;
         case 'employee':
             window.location.href = 'events.html';

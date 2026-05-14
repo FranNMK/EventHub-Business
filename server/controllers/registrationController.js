@@ -1,5 +1,6 @@
 const { pool } = require('../config/database');
 const crypto = require('crypto');
+const QRCode = require('qrcode');
 
 /**
  * Registration Controller
@@ -102,13 +103,27 @@ class RegistrationController {
           });
         }
 
-        // Reactivate the cancelled registration
-        const crypto = require('crypto');
+        // Generate QR token
         const qrToken = crypto.randomBytes(32).toString('hex');
         
+        // Generate QR code
+        const qrCodeDataUrl = await QRCode.toDataURL(JSON.stringify({
+            registrationId: cancelled[0].id,
+            eventId: eventId,
+            userId: req.user.id,
+            token: qrToken,
+            event: event.title,
+            date: event.date
+        }), {
+            width: 300,
+            margin: 2,
+            color: { dark: '#1a202c', light: '#ffffff' }
+        });
+
+        // Reactivate the cancelled registration
         await pool.query(
-          "UPDATE registrations SET status = 'registered', cancellation_date = NULL, registration_date = NOW(), qr_token = ? WHERE id = ?",
-          [qrToken, cancelled[0].id]
+          "UPDATE registrations SET status = 'registered', cancellation_date = NULL, registration_date = NOW(), qr_token = ?, qr_code = ? WHERE id = ?",
+          [qrToken, qrCodeDataUrl, cancelled[0].id]
         );
         
         await pool.query(
@@ -137,13 +152,25 @@ class RegistrationController {
       }
 
       // Generate QR token
-      const crypto = require('crypto');
       const qrToken = crypto.randomBytes(32).toString('hex');
+      
+      // Generate QR code
+      const qrCodeDataUrl = await QRCode.toDataURL(JSON.stringify({
+          eventId: eventId,
+          userId: req.user.id,
+          token: qrToken,
+          event: event.title,
+          date: event.date
+      }), {
+          width: 300,
+          margin: 2,
+          color: { dark: '#1a202c', light: '#ffffff' }
+      });
 
-      // Create registration
+      // Create registration with QR code
       const [result] = await pool.query(
-        `INSERT INTO registrations (event_id, user_id, status, qr_token) VALUES (?, ?, 'registered', ?)`,
-        [eventId, req.user.id, qrToken]
+        `INSERT INTO registrations (event_id, user_id, status, qr_token, qr_code) VALUES (?, ?, 'registered', ?, ?)`,
+        [eventId, req.user.id, qrToken, qrCodeDataUrl]
       );
 
       // Update available slots

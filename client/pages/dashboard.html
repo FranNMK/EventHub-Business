@@ -240,7 +240,7 @@
                         <div class="card-header">
                             <h3>Event Management</h3>
                             <div class="header-actions">
-                                <select id="eventFilter" class="form-control form-control-sm">
+                                <select id="eventFilter" class="form-control form-control-sm" onchange="filterEvents(this.value)">
                                     <option value="all">All Events</option>
                                     <option value="published">Published</option>
                                     <option value="draft">Draft</option>
@@ -588,6 +588,26 @@
                 <button class="btn btn-outline" onclick="closeServiceModal()">Cancel</button>
                 <button class="btn btn-primary" id="saveServiceBtn" onclick="saveService()">
                     <i class="fas fa-save"></i> Save Service
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div class="modal-overlay d-none" id="qrCodeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-qrcode"></i> Your Registration QR Code</h3>
+                <button class="modal-close" onclick="closeQRModal()">&times;</button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="qrCodeContainer">
+                    <img id="qrCodeImage" src="" alt="QR Code" style="max-width: 250px; border-radius: 8px;">
+                </div>
+                <p class="text-muted" style="margin-top: 1rem;" id="qrEventName"></p>
+                <p class="text-muted"><small>Present this QR code at event check-in</small></p>
+                <button class="btn btn-outline btn-sm mt-2" onclick="downloadQRCode()">
+                    <i class="fas fa-download"></i> Download QR Code
                 </button>
             </div>
         </div>
